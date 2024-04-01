@@ -7,7 +7,7 @@ import pandas as pd
 def create_geo_dataframe(shapefile_paths, geopackage_paths):
     try:
         # Einzelne GeoDataFrames für jede Gemeinde erstellen und sie in einer Liste speichern
-        gemeinden_gdfs = gpd.DataFrame()
+        gemeinden_gdfs = []
         for shapefile_path in shapefile_paths:
             gemeinden_gdfs.append(gpd.read_file(shapefile_path))
         for geopackage_path in geopackage_paths:
