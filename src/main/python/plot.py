@@ -42,3 +42,4 @@ def plot_demand_distribution(gemeindengrenzen_gdf, gemeinden_zentral_gdfs,
     ax.legend(title='Legende', loc='upper left')  # Legende außerhalb der Schleife platzieren
 
     plt.show()
+

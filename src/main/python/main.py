@@ -33,7 +33,7 @@ ROOT_RESOURCE_GEMEINDENGRENZEN = 'src/main/resources/QGIS/Gemeindegrenzen/'
 DATEN_GEMEINDENGRENZEN = gpd.read_file(ROOT_FILES + ROOT_RESOURCE_GEMEINDENGRENZEN + 'Gemeindegrenzen.shp')
 
 ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
-DATEN_STRASSENNETZ = gpd.read_file(ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + 'Strassen1.shp')
+DATEN_STRASSENNETZ = gpd.read_file(ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + 'AlleStrassen.shp')
 
 #Analyse des Verkehrsmodell in den Gemeinden
 gewuenschte_gemeinden = ['Meilen', 'Egg', 'Uster']
@@ -88,7 +88,6 @@ nachfrage_uster, nachfrage_uster_zentral,\
                      prozent_verteilung_hoch, prozent_verteilung_mittel,
                      prozent_verteilung_niedrig)
 
-print(nachfrage_egg)
 start_timestamp = pd.Timestamp('2018-04-20 09:00:00')
 end_timestamp = pd.Timestamp('2018-04-21 10:00:00')
 
@@ -152,10 +151,17 @@ uster_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_
 alle_punkte_df = pd.concat([egg_punkte_df, uster_punkte_df, meilen_punkte_df], ignore_index=True)
 alle_punkte_df_with_passenger_numbers = add_passenger_numbers(alle_punkte_df)
 
+alle_punkte_df_with_passenger_numbers.to_file(ROOT_FILES + ROOT_DOCS + "Nachfrage.geojson", driver='GeoJSON')
+
 # Plotten der Nachfrageverteilung
 plot_demand_distribution(DATEN_GEMEINDENGRENZEN, gdf_zentrale_Dichte,
                          gdf_hohe_Dichte, gdf_tiefe_Dichte,
                          DATEN_STRASSENNETZ, alle_punkte_df_with_passenger_numbers)
+# Beispielaufruf:
+new_destination_gdf = create_destination_gdf(alle_punkte_df_with_passenger_numbers, gdf_zentrale_Dichte, gdf_hohe_Dichte,
+                                             gdf_tiefe_Dichte)
+# Speichern der GeoDataFrame als GeoJSON-Datei
+new_destination_gdf.to_file(ROOT_FILES + ROOT_DOCS + "Ziele.geojson", driver='GeoJSON')
 
 # Anwenden der Funktion für das Hinzufügen von Zielspalten
 output_gdf = add_destination_columns(alle_punkte_df_with_passenger_numbers, gdf_zentrale_Dichte,
@@ -164,8 +170,8 @@ output_gdf = add_destination_columns(alle_punkte_df_with_passenger_numbers, gdf_
 # Speichern der GeoDataFrame als GeoJSON-Datei
 output_gdf.to_file(ROOT_FILES + ROOT_DOCS + "output.geojson", driver='GeoJSON')
 
-
+destination_gdf = filter_null_timestamp(output_gdf)
 
 plot_demand_distribution(DATEN_GEMEINDENGRENZEN, gdf_zentrale_Dichte,
                          gdf_hohe_Dichte, gdf_tiefe_Dichte,
-                         DATEN_STRASSENNETZ, output_gdf)
+                         DATEN_STRASSENNETZ, destination_gdf)

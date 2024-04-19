@@ -127,7 +127,7 @@ def prepare_demand_data(gemeinden_zentral_gdfs, gemeinden_höhere_Dichte_gdfs, g
 def add_passenger_numbers(gdf):
     gdf['passagier_nummer'] = range(1, len(gdf) + 1)
     return gdf
-def add_destination_columns(input_gdf, gemeinden_zentral_gdfs, gemeinden_höhere_Dichte_gdfs,
+def xadd_destination_columns(input_gdf, gemeinden_zentral_gdfs, gemeinden_höhere_Dichte_gdfs,
                             gemeinden_niedrige_Dichte_gdfs):
     # Extrahiere die eindeutigen Gemeinden aus dem GeoDataFrame
     gemeinden = input_gdf['gemeinde'].unique()
@@ -168,6 +168,123 @@ def add_destination_columns(input_gdf, gemeinden_zentral_gdfs, gemeinden_höhere
     input_gdf = pd.concat([input_gdf, new_rows_df], ignore_index=True)
 
     return input_gdf
+
+def add_destination_columns(input_gdf, gemeinden_zentral_gdfs, gemeinden_höhere_Dichte_gdfs,
+                            gemeinden_niedrige_Dichte_gdfs):
+    # Extrahiere die eindeutigen Gemeinden aus dem GeoDataFrame
+    gemeinden = input_gdf['gemeinde'].unique()
+
+    # Erstelle ein leeres DataFrame, um die neuen Zeilen hinzuzufügen
+    new_rows = []
+
+    # Erstelle ein Dictionary, um das Kontingent für jede Zielgemeinde zu verfolgen
+    kontingent_dict = {gemeinde: len(gemeinde_gdf) for gemeinde, gemeinde_gdf in input_gdf.groupby('gemeinde')}
+
+    # Iteriere über jede Gemeinde und zähle die Punkte
+    for gemeinde in gemeinden:
+        # Filtere das GeoDataFrame nach der aktuellen Gemeinde
+        gemeinde_gdf = input_gdf[input_gdf['gemeinde'] == gemeinde]
+
+        # Generiere die Zielpunkte für jeden Punkt in dieser Gemeinde
+        for index, row in gemeinde_gdf.iterrows():
+            # Überprüfe, ob es noch Zielgemeinden mit nicht erschöpftem Kontingent gibt
+            remaining_gemeinden = [g for g in gemeinden if g != gemeinde and kontingent_dict[g] > 0]
+            if len(remaining_gemeinden) == 0:
+                break  # Beende die Schleife, wenn alle Kontingente erschöpft sind
+
+            # Wähle eine Zielgemeinde aus den verbleibenden aus
+            ziel_gemeinde = np.random.choice(remaining_gemeinden)
+
+            # Reduziere das Kontingent für die Zielgemeinde um 1
+            kontingent_dict[ziel_gemeinde] -= 1
+
+            # Zufällige Auswahl eines Zielpunktes in der Zielgemeinde
+            ziel_gemeinde_gdf = gemeinden_zentral_gdfs if ziel_gemeinde in gemeinden_zentral_gdfs['GEMEINDE'].values \
+                else (gemeinden_höhere_Dichte_gdfs if ziel_gemeinde in gemeinden_höhere_Dichte_gdfs[
+                'GEMEINDE'].values else gemeinden_niedrige_Dichte_gdfs)
+
+            ziel_punkt_index = np.random.choice(ziel_gemeinde_gdf[ziel_gemeinde_gdf['GEMEINDE'] == ziel_gemeinde].index)
+
+            # Erstelle eine Passagier-Nummer für jeden Punkt (aufsteigend)
+            passagier_nummer = len(new_rows) + 1  # Aufsteigende Passagier-Nummer
+
+            # Füge den Zielpunkt als neue Zeile zum DataFrame hinzu
+            ziel_punkt = ziel_gemeinde_gdf.loc[ziel_punkt_index, 'geometry'].centroid
+            new_rows.append({'geometry': ziel_punkt,
+                             'gemeinde': ziel_gemeinde,
+                             'passagier_nummer': passagier_nummer})
+
+    # Konvertiere die neuen Zeilen in ein DataFrame
+    new_rows_df = pd.DataFrame(new_rows)
+
+    # Füge die neuen Zeilen dem ursprünglichen GeoDataFrame hinzu
+    input_gdf = pd.concat([input_gdf, new_rows_df], ignore_index=True)
+
+    return input_gdf
+
+import pandas as pd
+import numpy as np
+import geopandas as gpd
+
+def create_destination_gdf(input_gdf, gemeinden_zentral_gdfs, gemeinden_höhere_Dichte_gdfs,
+                            gemeinden_niedrige_Dichte_gdfs):
+    # Extrahiere die eindeutigen Gemeinden aus dem GeoDataFrame
+    gemeinden = input_gdf['gemeinde'].unique()
+
+    # Erstelle ein leeres DataFrame, um die neuen Zeilen hinzuzufügen
+    new_rows = []
+
+    # Erstelle ein Dictionary, um das Kontingent für jede Zielgemeinde zu verfolgen
+    kontingent_dict = {gemeinde: len(gemeinde_gdf) for gemeinde, gemeinde_gdf in input_gdf.groupby('gemeinde')}
+
+    # Iteriere über jede Gemeinde und zähle die Punkte
+    for gemeinde in gemeinden:
+        # Filtere das GeoDataFrame nach der aktuellen Gemeinde
+        gemeinde_gdf = input_gdf[input_gdf['gemeinde'] == gemeinde]
+
+        # Generiere die Zielpunkte für jeden Punkt in dieser Gemeinde
+        for index, row in gemeinde_gdf.iterrows():
+            # Überprüfe, ob es noch Zielgemeinden mit nicht erschöpftem Kontingent gibt
+            remaining_gemeinden = [g for g in gemeinden if g != gemeinde and kontingent_dict[g] > 0]
+            if len(remaining_gemeinden) == 0:
+                break  # Beende die Schleife, wenn alle Kontingente erschöpft sind
+
+            # Wähle eine Zielgemeinde aus den verbleibenden aus
+            ziel_gemeinde = np.random.choice(remaining_gemeinden)
+
+            # Reduziere das Kontingent für die Zielgemeinde um 1
+            kontingent_dict[ziel_gemeinde] -= 1
+
+            # Zufällige Auswahl eines Zielpunktes in der Zielgemeinde
+            ziel_gemeinde_gdf = gemeinden_zentral_gdfs if ziel_gemeinde in gemeinden_zentral_gdfs['GEMEINDE'].values \
+                else (gemeinden_höhere_Dichte_gdfs if ziel_gemeinde in gemeinden_höhere_Dichte_gdfs[
+                'GEMEINDE'].values else gemeinden_niedrige_Dichte_gdfs)
+
+            ziel_punkt_index = np.random.choice(ziel_gemeinde_gdf[ziel_gemeinde_gdf['GEMEINDE'] == ziel_gemeinde].index)
+
+            # Erstelle eine Passagier-Nummer für jeden Punkt (aufsteigend)
+            passagier_nummer = len(new_rows) + 1  # Aufsteigende Passagier-Nummer
+
+            # Füge den Zielpunkt als neue Zeile zum DataFrame hinzu
+            ziel_punkt = ziel_gemeinde_gdf.loc[ziel_punkt_index, 'geometry'].centroid
+            new_rows.append({'geometry': ziel_punkt,
+                             'gemeinde': ziel_gemeinde,
+                             'passagier_nummer': passagier_nummer})
+
+    # Konvertiere die neuen Zeilen in ein DataFrame
+    new_rows_df = pd.DataFrame(new_rows)
+
+    # Erstelle ein GeoDataFrame aus den neuen Zeilen
+    destination_gdf = gpd.GeoDataFrame(new_rows_df, geometry='geometry')
+
+    return destination_gdf
+
+
+
+
+def filter_null_timestamp(gdf):
+    filtered_gdf = gdf[gdf['timestamp'].isnull()]
+    return filtered_gdf
 
 
 
