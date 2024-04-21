@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import geopandas as gpd
+import osmnx as ox
+
 
 
 # Liste der Farben für die Gemeinden
@@ -43,3 +45,7 @@ def plot_demand_distribution(gemeindengrenzen_gdf, gemeinden_zentral_gdfs,
 
     plt.show()
 
+
+def plot_routes(G, routes):
+    fig, ax = ox.plot_graph_routes(G, routes, node_size=0)
+    return fig, ax
