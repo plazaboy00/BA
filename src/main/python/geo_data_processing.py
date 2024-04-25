@@ -245,7 +245,7 @@ def create_destination_gdf(input_gdf, gemeinden_zentral_gdfs, gemeinden_höhere_
         # Generiere die Zielpunkte für jeden Punkt in dieser Gemeinde
         for index, row in gemeinde_gdf.iterrows():
             # Überprüfe, ob es noch Zielgemeinden mit nicht erschöpftem Kontingent gibt
-            remaining_gemeinden = [g for g in gemeinden if g != gemeinde and kontingent_dict[g] > 0]
+            remaining_gemeinden = [g for g in gemeinden if g != gemeinde and kontingent_dict[g] >= 0]
             if len(remaining_gemeinden) == 0:
                 break  # Beende die Schleife, wenn alle Kontingente erschöpft sind
 
