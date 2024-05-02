@@ -298,3 +298,20 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, main_stop
 
     return section_trip_points, successful_trips
 
+
+def split_sections(input_list):
+    section1 = input_list[0]
+    section2 = input_list[1]
+    section3 = input_list[2]
+    section4 = input_list[3]
+
+    return section1, section2, section3, section4
+
+def route_node(G, sections):
+    routes = []
+    for section in sections:
+        route = []
+        for i in range(len(section) - 1):
+            route.extend(nx.shortest_path(G, section[i], section[i + 1], weight='travel_time'))
+        routes.append(route)
+    return routes

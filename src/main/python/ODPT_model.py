@@ -85,3 +85,11 @@ sorted_section_trip_points, successful_trips = process_demand_points\
     (demand_gdf, target_gdf, main_stops_gdf, main_stops_gdf, G)
 print(sorted_section_trip_points)
 print(successful_trips)
+
+# Unterteile die Nodes in die Sektoren
+section1, section2, section3, section4 = split_sections(sorted_section_trip_points)
+route1 = route_node(G, [section1])
+route2 = route_node(G, [section2])
+route3 = route_node(G, [section3])
+route4 = route_node(G, [section4])
+
