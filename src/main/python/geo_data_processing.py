@@ -1,4 +1,3 @@
-# TODO 1: Importiere die benötigten Bibliotheken
 import numpy as np
 import geopandas as gpd
 import pandas as pd

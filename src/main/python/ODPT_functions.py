@@ -228,7 +228,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, main_stop
     successful_trips = 0
 
     section_trip_points = create_section_trip_points(main_stops_gdf)
-    print(section_trip_points)
+    #print(section_trip_points)
 
     # Iteriere über die Nachfrageknoten
     for demand_index, demand_row in demand_nodes.iterrows():
@@ -267,7 +267,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, main_stop
         section_tuple = corresponding_target_node['section'].values[0]
         target_start_stop, target_end_stop = section_tuple
         target_node = corresponding_target_node['nearest_node'].values[0]
-        print('target node', target_node)
+        #print('target node', target_node)
 
         # Suche den Start-Hauptknoten des Ziel-Knotens
         target_start_stop_row = main_stop_nodes.loc[main_stop_nodes.index == target_start_stop]
@@ -279,18 +279,18 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, main_stop
 
         section_trip_points = add_node_to_section(nearest_node_target_start, nearest_node_target_end, target_node,
                                                   section_trip_points)
-        print('section_trip_points 1', section_trip_points)
+        #print('section_trip_points 1', section_trip_points)
         section_trip_points = sort_sublists_by_shortest_path(section_trip_points, G)
         # print('sortierte liste' , sorted_section_trip_points)
 
         # Berechne die Gesamtreisezeit für die sortierten Abschnitte
         travel_time_target = calculate_travel_time_for_updated_section(target_node, section_trip_points, G)
-        print(travel_time_target)
+        #print(travel_time_target)
 
         # Überprüfe, ob die Reisezeit pro Abschnitt die maximale Reisezeit pro Abschnitt überschreitet
         if travel_time_target > max_travel_time_per_section:
             section_trip_points = remove_demand_node_from_sublist(target_node, section_trip_points)
-            print('sorted_section_trip_points 2', section_trip_points)
+            #print('sorted_section_trip_points 2', section_trip_points)
             continue
 
         # Die Route zwischen Hauptknoten liegt innerhalb der Zeitbeschränkung
@@ -315,3 +315,16 @@ def route_node(G, sections):
             route.extend(nx.shortest_path(G, section[i], section[i + 1], weight='travel_time'))
         routes.append(route)
     return routes
+
+
+def calculate_section_travel_time(route, graph):
+    total_travel_time = 0
+
+    for node in route:
+        for i in range(len(node) - 1):
+            start_node = node[i]
+            end_node = node[i + 1]
+            travel_time = nx.shortest_path_length(graph, start_node, end_node, weight='travel_time')
+            total_travel_time += travel_time
+
+    return total_travel_time

@@ -89,7 +89,7 @@ nachfrage_uster, nachfrage_uster_zentral,\
                      prozent_verteilung_niedrig)
 
 start_timestamp = pd.Timestamp('2018-04-20 09:00:00')
-end_timestamp = pd.Timestamp('2018-04-21 10:00:00')
+end_timestamp = pd.Timestamp('2018-04-20 10:00:00')
 
 (nachfrage_meilen_zentral_pos, nachfrage_meilen_zentral_timestamps), \
 (nachfrage_meilen_höhere_Dichte_pos, nachfrage_meilen_höhere_Dichte_timestamps), \

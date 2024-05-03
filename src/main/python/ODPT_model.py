@@ -83,8 +83,8 @@ demand_gdf, target_gdf = add_section_to_points(G, sorted_demand_gdf, sorted_targ
 
 sorted_section_trip_points, successful_trips = process_demand_points\
     (demand_gdf, target_gdf, main_stops_gdf, main_stops_gdf, G)
-print(sorted_section_trip_points)
-print(successful_trips)
+#print(sorted_section_trip_points)
+print('Erfolgreiche Trips:', successful_trips)
 
 # Unterteile die Nodes in die Sektoren
 section1, section2, section3, section4 = split_sections(sorted_section_trip_points)
@@ -92,4 +92,13 @@ route1 = route_node(G, [section1])
 route2 = route_node(G, [section2])
 route3 = route_node(G, [section3])
 route4 = route_node(G, [section4])
+
+# Reisezeit der Sektoren & gesamt Reisezeit
+travel_time1 = calculate_section_travel_time(route1, G)
+travel_time2 = calculate_section_travel_time(route2, G)
+travel_time3 = calculate_section_travel_time(route3, G)
+travel_time4 = calculate_section_travel_time(route4, G)
+
+total_travel_time = (travel_time1 + travel_time2 + travel_time3 + travel_time4) / 60
+print('Gesamtereisezeit in Minuten:', total_travel_time)
 
