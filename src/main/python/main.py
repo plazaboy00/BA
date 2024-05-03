@@ -4,8 +4,9 @@ import pandas as pd
 import matplotlib as plt
 import os
 #print(1)
+
 from geo_data_processing import *
-from plot import plot_demand_distribution
+from plot import *
 
 
 # Erstelle Root zum Hauptordner
@@ -36,8 +37,8 @@ ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
 DATEN_STRASSENNETZ = gpd.read_file(ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + 'AlleStrassen.shp')
 
 #Analyse des Verkehrsmodell in den Gemeinden
-gewuenschte_gemeinden = ['Meilen', 'Egg', 'Uster']
-gewuenschte_zielnamen = ['Meilen', 'Egg', 'Uster']
+gewuenschte_gemeinden = ['Meilen', 'Egg', 'Uster', 'Uetikon am See']
+gewuenschte_zielnamen = ['Meilen', 'Egg', 'Uster', 'Uetikon am See']
 gewuenschte_kategorien = ['Verkehrsaufkommen']
 gewuenschte_verkehrsmittel = ['oev']
 gewuenschtes_jahr = 2018
@@ -46,11 +47,15 @@ gewuenschtes_jahr = 2018
 DATEN_FILTERED = filter_data(DATEN_VERKEHRSMODELL, gewuenschtes_jahr,
                              gewuenschte_gemeinden, gewuenschte_zielnamen,
                              gewuenschte_kategorien, gewuenschte_verkehrsmittel)
-
+#print(DATEN_FILTERED)
 # Filtern der Daten für jeden Zielort
 daten_meilen = filter_target_data(DATEN_FILTERED, 'Meilen')
 daten_egg = filter_target_data(DATEN_FILTERED, 'Egg')
 daten_uster = filter_target_data(DATEN_FILTERED, 'Uster')
+daten_uetikon = filter_target_data(DATEN_FILTERED, 'Uetikon am See')
+#print(daten_meilen)
+#print(daten_egg)
+#print(daten_uetikon)
 
 
 # Annahme: Vordefinierte Werte für stunden_verkehrstag und prozent_verteilung_hoch/mittel/niedrig
@@ -65,21 +70,53 @@ Anzahl_Meilen_Egg_oev = filter_and_calculate_traffic_data(
 Anzahl_Meilen_Egg_miv = filter_and_calculate_traffic_data(
     DATEN_VERKEHRSMODELL, 'Meilen', 'Egg', 'miv', 2018, 'Verkehrsaufkommen'
 )
+Anzahl_Uetikon_Egg_oev = filter_and_calculate_traffic_data(
+    DATEN_VERKEHRSMODELL, 'Uetikon am See', 'Egg', 'oev', 2018, 'Verkehrsaufkommen'
+)
+Anzahl_Uetikon_Egg_miv = filter_and_calculate_traffic_data(
+    DATEN_VERKEHRSMODELL, 'Uetikon am See', 'Egg', 'miv', 2018, 'Verkehrsaufkommen'
+)
+Anzahl_oetwil_maennedorf_miv = filter_and_calculate_traffic_data(
+    DATEN_VERKEHRSMODELL, 'Oetwil am See', 'Männedorf', 'miv', 2018, 'Verkehrsaufkommen'
+)
+Anzahl_oetwil_maennedorf_oev = filter_and_calculate_traffic_data(
+    DATEN_VERKEHRSMODELL, 'Oetwil am See', 'Männedorf', 'oev', 2018, 'Verkehrsaufkommen'
+)
 modal_split_oev_Oetwil = filter_and_calculate_traffic_data(
     DATEN_VERKEHRSMODELL, 'Oetwil am See', 'Männedorf', 'oev', 2018, 'Modal Split'
 )
+modal_split_oev_oetwil_uster = filter_and_calculate_traffic_data(
+    DATEN_VERKEHRSMODELL, 'Oetwil am See', 'Uster', 'oev', 2018, 'Modal Split'
+)
 
+print('miv oet männe', Anzahl_oetwil_maennedorf_miv)
+print('oev oet männe', Anzahl_oetwil_maennedorf_oev)
+print('modal split oet männe', modal_split_oev_Oetwil)
+
+# Berechne das neue Verkehrsaufkommen für die Gemeinden Meilen und Uetikon
 neues_verkehrsaufkommen_oev_Meilen_Egg = berechne_verkehrsaufkommen(
-    Anzahl_Meilen_Egg_oev, Anzahl_Meilen_Egg_miv, modal_split_oev_Oetwil)
+    Anzahl_Meilen_Egg_oev, Anzahl_Meilen_Egg_miv, modal_split_oev_Oetwil) - Anzahl_Meilen_Egg_oev
+print('Meilen egg', neues_verkehrsaufkommen_oev_Meilen_Egg)
+print('Meilen egg oev alt', Anzahl_Meilen_Egg_oev)
+print('Meilen egg miv alt', Anzahl_Meilen_Egg_miv)
+
+neues_verkehrsaufkommen_oev_Uetikon_Egg = berechne_verkehrsaufkommen(
+    Anzahl_Uetikon_Egg_oev, Anzahl_Uetikon_Egg_miv, modal_split_oev_Oetwil) - Anzahl_Uetikon_Egg_oev
+print('Uetikon egg', neues_verkehrsaufkommen_oev_Uetikon_Egg)
+print('Uetikon egg oev alt', Anzahl_Uetikon_Egg_oev)
+print('Uetikon egg miv alt', Anzahl_Uetikon_Egg_miv)
+
+
 
 nachfrage_meilen, nachfrage_meilen_zentral,\
     nachfrage_meilen_höhere_Dichte, nachfrage_meilen_niedrige_Dichte =\
-    calculate_new_demand(neues_verkehrsaufkommen_oev_Meilen_Egg, stunden_verkehrstag,
+    calculate_new_demand(daten_meilen, neues_verkehrsaufkommen_oev_Meilen_Egg, stunden_verkehrstag,
                      prozent_verteilung_hoch, prozent_verteilung_mittel,
                      prozent_verteilung_niedrig)
 nachfrage_egg, nachfrage_egg_zentral,\
     nachfrage_egg_höhere_Dichte, nachfrage_egg_niedrige_Dichte =\
-    calculate_demand(daten_egg, stunden_verkehrstag,
+    calculate_new_demand(daten_egg, neues_verkehrsaufkommen_oev_Meilen_Egg
+                         + neues_verkehrsaufkommen_oev_Uetikon_Egg, stunden_verkehrstag,
                      prozent_verteilung_hoch, prozent_verteilung_mittel,
                      prozent_verteilung_niedrig)
 nachfrage_uster, nachfrage_uster_zentral,\
@@ -88,9 +125,17 @@ nachfrage_uster, nachfrage_uster_zentral,\
                      prozent_verteilung_hoch, prozent_verteilung_mittel,
                      prozent_verteilung_niedrig)
 
+nachfrage_uetikon, nachfrage_uetikon_zentral,\
+    nachfrage_uetikon_höhere_Dichte, nachfrage_uetikon_niedrige_Dichte =\
+    calculate_new_demand(daten_uetikon, neues_verkehrsaufkommen_oev_Uetikon_Egg, stunden_verkehrstag,
+                     prozent_verteilung_hoch, prozent_verteilung_mittel,
+                     prozent_verteilung_niedrig)
+
+# Setze die Zeitstempel für die Nachfragepunkte
 start_timestamp = pd.Timestamp('2018-04-20 09:00:00')
 end_timestamp = pd.Timestamp('2018-04-20 10:00:00')
 
+# Verteile die Nachfragepunkte in den Gemeinden
 (nachfrage_meilen_zentral_pos, nachfrage_meilen_zentral_timestamps), \
 (nachfrage_meilen_höhere_Dichte_pos, nachfrage_meilen_höhere_Dichte_timestamps), \
 (nachfrage_meilen_niedrige_Dichte_pos, nachfrage_meilen_niedrige_Dichte_timestamps) = \
@@ -119,15 +164,29 @@ end_timestamp = pd.Timestamp('2018-04-20 10:00:00')
                              gdf_zentrale_Dichte, gdf_hohe_Dichte,
                              gdf_tiefe_Dichte, start_timestamp, end_timestamp)
 
+(nachfrage_uetikon_zentral_pos, nachfrage_uetikon_zentral_timestamps), \
+(nachfrage_uetikon_höhere_Dichte_pos, nachfrage_uetikon_höhere_Dichte_timestamps), \
+(nachfrage_uetikon_niedrige_Dichte_pos, nachfrage_uetikon_niedrige_Dichte_timestamps) = \
+    verteile_nachfragepunkte('Uetikon am See', nachfrage_uetikon_zentral,
+                                nachfrage_uetikon_höhere_Dichte,
+                                nachfrage_uetikon_niedrige_Dichte,
+                                gdf_zentrale_Dichte, gdf_hohe_Dichte,
+                                gdf_tiefe_Dichte, start_timestamp, end_timestamp)
 
 print(nachfrage_meilen_zentral)
+print('Daten Meilen:' , nachfrage_meilen)
 print('Daten Meilen:' , nachfrage_meilen_zentral_pos)
 print('Daten Meilen:' , nachfrage_meilen_höhere_Dichte_pos)
+print('Daten Meilen:' , nachfrage_meilen_niedrige_Dichte_pos)
 print('Daten Egg:' , nachfrage_egg_zentral_pos)
 print('Daten Uster:' , nachfrage_uster)
 print('Daten Uster:' , nachfrage_uster_zentral_pos)
 print('Daten Uster:' , nachfrage_uster_höhere_Dichte_pos)
-print('Daten Uster:' , nachfrage_uster_niedrige_Dichte_timestamps)
+#print('Daten Uster:' , nachfrage_uster_niedrige_Dichte_timestamps)
+print('Daten Uetikon:' , nachfrage_uetikon)
+print('Daten Uetikon:' , nachfrage_uetikon_zentral_pos)
+print('Daten Uetikon:' , nachfrage_uetikon_höhere_Dichte_pos)
+print('Daten Uetikon:' , nachfrage_uetikon_niedrige_Dichte_pos)
 
 # Rufe die Funktion auf, um die Daten vorzubereiten
 meilen_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
@@ -147,8 +206,14 @@ uster_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_
                                        nachfrage_uster_höhere_Dichte_timestamps, nachfrage_uster_niedrige_Dichte_timestamps,
                                       'Uster')
 
+uetikon_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
+                                       nachfrage_uetikon_zentral_pos, nachfrage_uetikon_höhere_Dichte_pos,
+                                       nachfrage_uetikon_niedrige_Dichte_pos, nachfrage_uetikon_zentral_timestamps,
+                                       nachfrage_uetikon_höhere_Dichte_timestamps, nachfrage_uetikon_niedrige_Dichte_timestamps,
+                                       'Uetikon am See')
+
 # Verwendung von aussagekräftigen Variablennamen und Inline-Kommentaren
-alle_punkte_df = pd.concat([egg_punkte_df, uster_punkte_df, meilen_punkte_df], ignore_index=True)
+alle_punkte_df = pd.concat([egg_punkte_df, uster_punkte_df, meilen_punkte_df, uetikon_punkte_df], ignore_index=True)
 alle_punkte_df_with_passenger_numbers = add_passenger_numbers(alle_punkte_df)
 
 alle_punkte_df_with_passenger_numbers.to_file(ROOT_FILES + ROOT_DOCS + "Nachfrage.geojson", driver='GeoJSON')

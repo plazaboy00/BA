@@ -8,7 +8,8 @@ import osmnx as ox
 farben = {
     'Meilen': 'blue',
     'Egg': 'green',
-    'Uster': 'red'
+    'Uster': 'red',
+    'Uetikon am See': 'orange'
 }
 def plot_points(ax, punkt, farbe, label):
     ax.scatter(punkt.x, punkt.y, color=farbe, label=label)

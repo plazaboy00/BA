@@ -54,18 +54,20 @@ def berechne_verkehrsaufkommen(gemeinde_oev, gemeinde_miv, modal_split_miv):
 def calculate_demand(daten, stunden_verkehrstag, prozent_verteilung_hoch,
                      prozent_verteilung_mittel, prozent_verteilung_niedrig):
     nachfrage = int(daten['wert'].sum() / stunden_verkehrstag)
-    nachfrage_zentral = int(prozent_verteilung_hoch * nachfrage)
+    #nachfrage_zentral = int(prozent_verteilung_hoch * nachfrage)
     nachfrage_höhere_Dichte = int(prozent_verteilung_mittel * nachfrage)
     nachfrage_niedrige_Dichte = int(prozent_verteilung_niedrig * nachfrage)
+    nachfrage_zentral = nachfrage - nachfrage_höhere_Dichte - nachfrage_niedrige_Dichte
     return nachfrage, nachfrage_zentral,\
         nachfrage_höhere_Dichte, nachfrage_niedrige_Dichte
 
-def calculate_new_demand(daten, stunden_verkehrstag, prozent_verteilung_hoch,
+def calculate_new_demand(daten, additional_data, stunden_verkehrstag, prozent_verteilung_hoch,
                      prozent_verteilung_mittel, prozent_verteilung_niedrig):
-    nachfrage = daten / stunden_verkehrstag
-    nachfrage_zentral = int(prozent_verteilung_hoch * nachfrage)
+    nachfrage = int((daten['wert'].sum() + additional_data) / stunden_verkehrstag)
+    #nachfrage_zentral = int(prozent_verteilung_hoch * nachfrage)
     nachfrage_höhere_Dichte = int(prozent_verteilung_mittel * nachfrage)
     nachfrage_niedrige_Dichte = int(prozent_verteilung_niedrig * nachfrage)
+    nachfrage_zentral = nachfrage - nachfrage_höhere_Dichte - nachfrage_niedrige_Dichte
     return nachfrage, nachfrage_zentral,\
         nachfrage_höhere_Dichte, nachfrage_niedrige_Dichte
 
@@ -284,17 +286,4 @@ def create_destination_gdf(input_gdf, gemeinden_zentral_gdfs, gemeinden_höhere_
 def filter_null_timestamp(gdf):
     filtered_gdf = gdf[gdf['timestamp'].isnull()]
     return filtered_gdf
-
-
-
-
-
-
-
-
-
-
-
-
-
 
