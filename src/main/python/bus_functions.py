@@ -121,6 +121,7 @@ def plot_passengers(passengers_gdf, bus_stops_gdf, demand_geojson, destination_g
 
 def count_passengers(passengers_gdf):
     num_passengers = passengers_gdf.shape[0]
+    return num_passengers
     print("Anzahl der Passagiere im Bus:", num_passengers)
 
 # Funktion zum Plotten der Routen auf dem Straßennetzwerk

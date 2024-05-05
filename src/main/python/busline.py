@@ -37,10 +37,6 @@ routes, route_lengths = compute_shortest_paths(G, bus_stops_with_return_wgs84)
 # Plotten der Routen auf dem Straßennetzwerk
 plot_routes(G, routes)
 
-# Berechnung der Gesamtlänge der Route
-total_route_length = sum(route_lengths) / 1000
-print("Gesamtlänge der Route:", total_route_length, "Kilometer")
-
 
 file_path_demand = ROOT_FILES + ROOT_DOCS + "Nachfrage.geojson"
 file_path_destination = ROOT_FILES + ROOT_DOCS + "Ziele.geojson"
@@ -51,4 +47,9 @@ passengers_gdf = passengers_on_bus(bus_stops_with_return, demand_geojson, destin
 
 plot_passengers(passengers_gdf, bus_stops_with_return, demand_geojson, destination_geojson, gemeindegrenzen)
 
-count_passengers(passengers_gdf)
+# Berechnung der Gesamtlänge der Route
+total_route_length = sum(route_lengths) / 1000
+print("Gesamtlänge der Route:", total_route_length, "Kilometer")
+# Gib die Anzahl Passagiere zurück
+num_passengers = count_passengers(passengers_gdf)
+print("Anzahl der Passagiere im Bus:", num_passengers)

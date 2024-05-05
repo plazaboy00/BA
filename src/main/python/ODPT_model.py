@@ -78,12 +78,15 @@ sorted_demand_gdf, sorted_target_gdf = sort_demand_target_nodes\
 
 # Füge die section zu den Nachfrage- und Ziel Punkten dazu
 demand_gdf, target_gdf = add_section_to_points(G, sorted_demand_gdf, sorted_target_gdf, ODPT_stops_wgs84)
+# Sortiere die Target-Nodes in die section nach dem Demand-Node
+demand_gdf, target_gdf = sort_target_section(demand_gdf, target_gdf)
 #print(demand_gdf.head())
 #print(target_gdf.head())
 
+max_travel_time_per_section = 900  # 15 Minuten
 sorted_section_trip_points, successful_trips = process_demand_points\
-    (demand_gdf, target_gdf, main_stops_gdf, main_stops_gdf, G)
-#print(sorted_section_trip_points)
+    (demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, G)
+print(sorted_section_trip_points)
 print('Erfolgreiche Trips:', successful_trips)
 
 # Unterteile die Nodes in die Sektoren
@@ -99,6 +102,19 @@ travel_time2 = calculate_section_travel_time(route2, G)
 travel_time3 = calculate_section_travel_time(route3, G)
 travel_time4 = calculate_section_travel_time(route4, G)
 
+# Strecke des ODPT Fahrzeuges
+travel_distance1 = calculate_route_travel_distance(route1, G)
+travel_distance2 = calculate_route_travel_distance(route2, G)
+travel_distance3 = calculate_route_travel_distance(route3, G)
+travel_distance4 = calculate_route_travel_distance(route4, G)
+
+
 total_travel_time = (travel_time1 + travel_time2 + travel_time3 + travel_time4) / 60
-print('Gesamtereisezeit in Minuten:', total_travel_time)
+print('Gesamtreisezeit in Minuten:', total_travel_time)
+
+max_passengers = passenger_in_vehicle(sorted_section_trip_points, demand_gdf, target_gdf)
+print('Höchste Anzahl an Passagieren:', max_passengers)
+
+total_distance = travel_distance1 + travel_distance2 + travel_distance3 + travel_distance4
+print('Zurückgelegte Distanz:', total_distance, 'km')
 
