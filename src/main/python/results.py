@@ -109,8 +109,8 @@ def value_created(df):
     mean_passenger_bus = total_passenger_bus / len(df)
     mean_passenger_ODPT = total_passenger_ODPT / len(df)
 
-    mean_travel_time_bus = df.loc[0, 'mean_travel_time_per_passenger_bus']
-    mean_travel_time_ODPT = df.loc[0, 'mean_travel_time_per_passenger_ODPT']
+    mean_travel_time_bus = df['mean_travel_time_per_passenger_bus'].sum() / len(df)
+    mean_travel_time_ODPT = df['mean_travel_time_per_passenger_ODPT'].sum() / len(df)
     #print('mean', mean_travel_time_ODPT)
 
     value_bus = value_of_vtts(mean_passenger_bus, mean_travel_time_bus)

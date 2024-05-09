@@ -126,6 +126,6 @@ def ODPT():
 
     return max_passengers, total_distance, total_travel_time, passengers_gdf
 
-ODPT_passengers, ODPT_km, ODPT_total_travel_time, passenger_gdf = ODPT()
+#ODPT_passengers, ODPT_km, ODPT_total_travel_time, passenger_gdf = ODPT()
 
 

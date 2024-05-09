@@ -36,3 +36,4 @@ if __name__ == "__main__":
     combined_results, costs, value = run_simulation(num_simulations)
     print(combined_results)
     print(costs)
+    print(value)

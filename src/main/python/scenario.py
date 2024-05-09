@@ -1,10 +1,3 @@
-import numpy as np
-import geopandas as gpd
-import pandas as pd
-import matplotlib as plt
-import os
-#print(1)
-
 from geo_data_processing import *
 from plot import *
 
@@ -26,7 +19,6 @@ def scenario():
     gdf_hohe_Dichte = create_geo_dataframe(geo_files_hoch)
     gdf_zentrale_Dichte = create_geo_dataframe(geo_files_zentral)
 
-    #print(gdf_tiefe_Dichte)
     #Importiere die Datensätze für das Verkehrsmodell, das Strassenetz und der Gemeindengrenzen
     ROOT_RESOURCE_VERKEHRSMODELL = 'src/main/resources/Verkehrsmodell/'
     DATEN_VERKEHRSMODELL = pd.read_csv(ROOT_FILES + ROOT_RESOURCE_VERKEHRSMODELL + 'KTZH_00001982_00003903(1).csv')
@@ -48,15 +40,12 @@ def scenario():
     DATEN_FILTERED = filter_data(DATEN_VERKEHRSMODELL, gewuenschtes_jahr,
                                  gewuenschte_gemeinden, gewuenschte_zielnamen,
                                  gewuenschte_kategorien, gewuenschte_verkehrsmittel)
-    #print(DATEN_FILTERED)
+
     # Filtern der Daten für jeden Zielort
     daten_meilen = filter_target_data(DATEN_FILTERED, 'Meilen')
     daten_egg = filter_target_data(DATEN_FILTERED, 'Egg')
     daten_uster = filter_target_data(DATEN_FILTERED, 'Uster')
     daten_uetikon = filter_target_data(DATEN_FILTERED, 'Uetikon am See')
-    #print(daten_meilen)
-    #print(daten_egg)
-    #print(daten_uetikon)
 
 
     # Annahme: Vordefinierte Werte für stunden_verkehrstag und prozent_verteilung_hoch/mittel/niedrig
@@ -90,22 +79,12 @@ def scenario():
         DATEN_VERKEHRSMODELL, 'Oetwil am See', 'Uster', 'oev', 2018, 'Modal Split'
     )
 
-    #print('miv oet männe', Anzahl_oetwil_maennedorf_miv)
-    #print('oev oet männe', Anzahl_oetwil_maennedorf_oev)
-    #print('modal split oet männe', modal_split_oev_Oetwil)
-
     # Berechne das neue Verkehrsaufkommen für die Gemeinden Meilen und Uetikon
     neues_verkehrsaufkommen_oev_Meilen_Egg = berechne_verkehrsaufkommen(
         Anzahl_Meilen_Egg_oev, Anzahl_Meilen_Egg_miv, modal_split_oev_Oetwil) - Anzahl_Meilen_Egg_oev
-    #print('Meilen egg', neues_verkehrsaufkommen_oev_Meilen_Egg)
-    #print('Meilen egg oev alt', Anzahl_Meilen_Egg_oev)
-    #print('Meilen egg miv alt', Anzahl_Meilen_Egg_miv)
 
     neues_verkehrsaufkommen_oev_Uetikon_Egg = berechne_verkehrsaufkommen(
         Anzahl_Uetikon_Egg_oev, Anzahl_Uetikon_Egg_miv, modal_split_oev_Oetwil) - Anzahl_Uetikon_Egg_oev
-    #print('Uetikon egg', neues_verkehrsaufkommen_oev_Uetikon_Egg)
-    #print('Uetikon egg oev alt', Anzahl_Uetikon_Egg_oev)
-    #print('Uetikon egg miv alt', Anzahl_Uetikon_Egg_miv)
 
 
 
@@ -174,21 +153,6 @@ def scenario():
                                     gdf_zentrale_Dichte, gdf_hohe_Dichte,
                                     gdf_tiefe_Dichte, start_timestamp, end_timestamp)
 
-    #print(nachfrage_meilen_zentral)
-    #print('Daten Meilen:' , nachfrage_meilen)
-    #print('Daten Meilen:' , nachfrage_meilen_zentral_pos)
-    #print('Daten Meilen:' , nachfrage_meilen_höhere_Dichte_pos)
-    #print('Daten Meilen:' , nachfrage_meilen_niedrige_Dichte_pos)
-    #print('Daten Egg:' , nachfrage_egg_zentral_pos)
-    #print('Daten Uster:' , nachfrage_uster)
-    #print('Daten Uster:' , nachfrage_uster_zentral_pos)
-    #print('Daten Uster:' , nachfrage_uster_höhere_Dichte_pos)
-    #print('Daten Uster:' , nachfrage_uster_niedrige_Dichte_timestamps)
-    #print('Daten Uetikon:' , nachfrage_uetikon)
-    #print('Daten Uetikon:' , nachfrage_uetikon_zentral_pos)
-    #print('Daten Uetikon:' , nachfrage_uetikon_höhere_Dichte_pos)
-    #print('Daten Uetikon:' , nachfrage_uetikon_niedrige_Dichte_pos)
-
     # Rufe die Funktion auf, um die Daten vorzubereiten
     meilen_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
                                            nachfrage_meilen_zentral_pos, nachfrage_meilen_höhere_Dichte_pos,
@@ -243,5 +207,5 @@ def scenario():
     # DATEN_STRASSENNETZ, destination_gdf)
 
 
-scenario()
+#scenario()
 
