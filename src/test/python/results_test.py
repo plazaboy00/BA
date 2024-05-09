@@ -10,19 +10,24 @@ def results():
     # Provisorische Werte
     #bus_time = 55
 
-    busline_passengers, busline_km, busline_total_travel_time = busline()
+    busline_passengers, busline_km, busline_total_travel_time, bus_passengers_df = busline()
     #print(busline_passengers, busline_km, busline_total_travel_time)
 
-    ODPT_passengers, ODPT_km, ODPT_total_travel_time = ODPT()
+    ODPT_passengers, ODPT_km, ODPT_total_travel_time, ODPT_passengers_df = ODPT()
     #print(ODPT_passengers, ODPT_km, ODPT_total_travel_time)
+
+    mean_travel_time_per_passenger_bus = bus_passengers_df['travel_time'].mean()
+    mean_travel_time_per_passenger_ODPT = ODPT_passengers_df['travel_time'].mean()
 
     data = {
         "busline_km": busline_km,
         "busline_passengers": busline_passengers,
         "busline_total_travel_time": busline_total_travel_time,
+        "mean_travel_time_per_passenger_bus": mean_travel_time_per_passenger_bus,
         "ODPT_km": ODPT_km,
         "ODPT_passengers": ODPT_passengers,
-        "ODPT_total_travel_time": ODPT_total_travel_time
+        "ODPT_total_travel_time": ODPT_total_travel_time,
+        "mean_travel_time_per_passenger_ODPT": mean_travel_time_per_passenger_ODPT
     }
 
     # Erstelle einen DataFrame aus den Daten
@@ -80,8 +85,50 @@ def costs(df):
 
     # Erstelle einen DataFrame aus den Daten
     df = pd.DataFrame([data])
+    print(df)
 
     return df
+
+def value_created(df):
+    def value_of_vtts(number, travel_time):
+        h_per_day = 12
+        days_per_year = 365
+        CHF_per_h = 28
+        total_time_per_h = travel_time * number * CHF_per_h
+        value = total_time_per_h * h_per_day * days_per_year
+        return value
+
+    #print(df.head())
+
+    total_passenger_bus = df['busline_passengers'].sum()
+    total_passenger_ODPT = df['ODPT_passengers'].sum()
+    #print('total p', total_passenger_ODPT)
+
+    num_scenarios = len(df)
+    #print(num_scenarios)
+    mean_passenger_bus = total_passenger_bus / len(df)
+    mean_passenger_ODPT = total_passenger_ODPT / len(df)
+
+    mean_travel_time_bus = df.loc[0, 'mean_travel_time_per_passenger_bus']
+    mean_travel_time_ODPT = df.loc[0, 'mean_travel_time_per_passenger_ODPT']
+    #print('mean', mean_travel_time_ODPT)
+
+    value_bus = value_of_vtts(mean_passenger_bus, mean_travel_time_bus)
+    #print('wert bus', value_bus)
+    value_ODPT = value_of_vtts(mean_passenger_ODPT, mean_travel_time_ODPT)
+
+    data = {
+        "Bus income": value_bus,
+        "ODPT income": value_ODPT
+    }
+
+    # Erstelle einen DataFrame aus den Daten
+    df = pd.DataFrame([data])
+    #print(df)
+
+    return df
+
+
 
 
 #if __name__ == "__main__":

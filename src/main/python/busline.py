@@ -45,6 +45,7 @@ def busline():
     destination_geojson = load_geojson(file_path_destination)
 
     passengers_gdf = passengers_on_bus(bus_stops_with_return, demand_geojson, destination_geojson)
+    passengers_gdf = compute_shortest_paths_travel_time(G, passengers_gdf)
 
     #plot_passengers(passengers_gdf, bus_stops_with_return, demand_geojson, destination_geojson, gemeindegrenzen)
 
@@ -56,4 +57,8 @@ def busline():
     print("Anzahl der Passagiere im Bus:", num_passengers)
     travel_time_bus = 55
 
-    return num_passengers, total_route_length, travel_time_bus
+    print(passengers_gdf)
+
+    return num_passengers, total_route_length, travel_time_bus, passengers_gdf
+
+busline_passengers, busline_km, busline_total_travel_time, passenger_gdf = busline()

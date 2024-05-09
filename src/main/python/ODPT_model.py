@@ -87,10 +87,13 @@ def ODPT():
     #print(target_gdf.head())
 
     max_travel_time_per_section = 900  # 15 Minuten
-    sorted_section_trip_points, successful_trips = process_demand_points\
+    sorted_section_trip_points, successful_trips, passengers_gdf = process_demand_points\
         (demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, G)
     print(sorted_section_trip_points)
     print('Erfolgreiche Trips:', successful_trips)
+
+    passengers_gdf = calculate_passenger_travel_time(sorted_section_trip_points, G, passengers_gdf)
+    print(passengers_gdf)
 
     # Unterteile die Nodes in die Sektoren
     section1, section2, section3, section4 = split_sections(sorted_section_trip_points)
@@ -121,6 +124,8 @@ def ODPT():
     total_distance = travel_distance1 + travel_distance2 + travel_distance3 + travel_distance4
     print('Zurückgelegte Distanz:', total_distance, 'km')
 
-    return max_passengers, total_distance, total_travel_time
+    return max_passengers, total_distance, total_travel_time, passengers_gdf
+
+ODPT_passengers, ODPT_km, ODPT_total_travel_time, passenger_gdf = ODPT()
 
 

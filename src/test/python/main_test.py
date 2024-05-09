@@ -25,8 +25,9 @@ def run_simulation(num_simulations):
         df = pd.concat([df, current_results], ignore_index=True)
 
         costs = results.costs(df)
+        value = results.value_created(df)
 
-    return df, costs
+    return df, costs, value
 
 
 if __name__ == "__main__":

@@ -68,17 +68,40 @@ def passengers_on_bus(bus_stops_gdf, demand_geojson, destination_geojson):
             bus_stop_point = Point(coord)
             if bus_stop_point.buffer(500).contains(passenger_origin):
                 origin_in_buffer = True
+                start = bus_stop_point
             if bus_stop_point.buffer(500).contains(passenger_destination):
                 destination_in_buffer = True
+                end = bus_stop_point
             if origin_in_buffer and destination_in_buffer:
                 passengers.append({
                     'origin': passenger_origin,
                     'destination': passenger_destination,
+                    'start': start,
+                    'end': end,
                     'timestamp': demand_feature['properties']['timestamp']
                 })
                 break
 
     passengers_gdf = gpd.GeoDataFrame(passengers, geometry='origin')
+    return passengers_gdf
+
+
+def compute_shortest_paths_travel_time(G, passengers_gdf):
+    # routes = []
+    route_travel_times = []
+
+    for idx, row in passengers_gdf.iterrows():
+        orig = get_nearest_node(G, lv95_to_wgs84(row['start']))
+        dest = get_nearest_node(G, lv95_to_wgs84(row['end']))
+
+        # Berechne die Reisezeit für den kürzesten Pfad
+        route_travel_time = nx.shortest_path_length(G, orig, dest, weight='travel_time')
+        route_travel_times.append(route_travel_time)
+        print("Reisezeit von", orig, "nach", dest, ":", route_travel_time, "Minuten")
+
+    # Füge die Spalte 'travel_time' mit den berechneten Reisezeiten zum DataFrame hinzu
+    passengers_gdf['travel_time'] = route_travel_times
+
     return passengers_gdf
 
 def plot_passengers(passengers_gdf, bus_stops_gdf, demand_geojson, destination_geojson, gemeindegrenzen):
