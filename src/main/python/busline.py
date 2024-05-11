@@ -1,5 +1,6 @@
 from bus_functions import *
 from plot import *
+from roadmap import load_roadmap
 
 def busline():
     ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
@@ -13,14 +14,8 @@ def busline():
     # Pfad zur Shapefile-Datei mit den Strassen
     ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
 
-    # Definieren des Bereichs für das Straßennetzwerk
-    north, south, east, west = 47.3667, 47.2586, 8.754, 8.6103
-
     # Laden des Straßennetzwerks
-    G = load_street_network(north, south, east, west)
-
-    # Speichern des Straßennetzwerks als GeoPackage
-    save_street_network(G, ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + "OSMStrassennetz.gpkg")
+    G = load_roadmap()
 
     # Laden der Bushaltestellen
     bus_stops = gpd.read_file(ROOT_FILES + ROOT_Busstations + "Bushalte.shp")

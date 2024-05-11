@@ -43,7 +43,7 @@ def costs(df):
         mean_km = np.mean(km)
         km_per_a = mean_km * h_per_day * days_per_year
         costs_per_100 = km_per_a * CHF_per_100_Fzkm
-        costs = costs_per_100 * 100
+        costs = costs_per_100 / 100
 
         return costs
 
@@ -62,8 +62,11 @@ def costs(df):
     total_km_bus = df['busline_km'].sum()
     total_km_ODPT = df['ODPT_km'].sum()
 
-    bus_costs = costs_per_a_km(total_km_bus)
-    ODPT_costs = costs_per_a_km(total_km_ODPT)
+    mean_km_bus = total_km_bus / len(df)
+    mean_km_ODPT = total_km_ODPT / len(df)
+
+    bus_costs = costs_per_a_km(mean_km_bus)
+    ODPT_costs = costs_per_a_km(mean_km_ODPT)
 
     total_passenger_bus = df['busline_passengers'].sum()
     total_passenger_ODPT = df['ODPT_passengers'].sum()
@@ -93,7 +96,7 @@ def value_created(df):
     def value_of_vtts(number, travel_time):
         h_per_day = 12
         days_per_year = 365
-        CHF_per_h = 28
+        CHF_per_h = 14
         total_time_per_h = travel_time * number * CHF_per_h
         value = total_time_per_h * h_per_day * days_per_year
         return value

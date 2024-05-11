@@ -47,9 +47,8 @@ def scenario():
     daten_uster = filter_target_data(DATEN_FILTERED, 'Uster')
     daten_uetikon = filter_target_data(DATEN_FILTERED, 'Uetikon am See')
 
-
     # Annahme: Vordefinierte Werte für stunden_verkehrstag und prozent_verteilung_hoch/mittel/niedrig
-    stunden_verkehrstag = 48
+    stunden_verkehrstag = 12
     prozent_verteilung_hoch = 0.5
     prozent_verteilung_mittel = 0.3
     prozent_verteilung_niedrig = 0.2
@@ -85,7 +84,6 @@ def scenario():
 
     neues_verkehrsaufkommen_oev_Uetikon_Egg = berechne_verkehrsaufkommen(
         Anzahl_Uetikon_Egg_oev, Anzahl_Uetikon_Egg_miv, modal_split_oev_Oetwil) - Anzahl_Uetikon_Egg_oev
-
 
 
     nachfrage_meilen, nachfrage_meilen_zentral,\
