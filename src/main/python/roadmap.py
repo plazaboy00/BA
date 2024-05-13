@@ -1,5 +1,6 @@
 import osmnx as ox
 from bus_functions import load_street_network, save_street_network
+import json
 
 
 def load_roadmap():
@@ -12,6 +13,17 @@ def load_roadmap():
 
     # Laden des Straßennetzwerks
     graph = load_street_network(north, south, east, west)
+
+    # Konvertieren des Graphen in ein GeoJSON-FeatureCollection
+    features = ox.graph_to_gdfs(graph, nodes=False, edges=True)
+    geojson_data = features.to_json()
+
+    # Bestimmen des relativen Pfads
+    file_path = ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + "strassenetzwerk.geojson"
+
+    # Schreiben den GeoJSON-Daten in die Datei
+    with open(file_path, "w") as f:
+        json.dump(geojson_data, f)
 
     # impute edge (driving) speeds and calculate edge travel times
     graph = ox.speed.add_edge_speeds(graph)

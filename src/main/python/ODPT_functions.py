@@ -61,15 +61,13 @@ def sort_demand_target_nodes(graph, demand_gdf, target_gdf, main_stops_gdf):
     # Berechne die Gesamtreisezeit für jede Zeile in demand_gdf und target_gdf
     demand_travel_times = {}
     for idx, demand_point in demand_gdf.iterrows():
-        closest_main_stop = min(main_stops_gdf['nearest_node'],
-                                key=lambda x: nx.shortest_path_length(graph, demand_point['nearest_node'], x))
+        closest_main_stop = min(main_stops_gdf['nearest_node'], key=lambda x: nx.shortest_path_length(graph, demand_point['nearest_node'], x))
         demand_travel_time = nx.shortest_path_length(graph, demand_point['nearest_node'], closest_main_stop)
         demand_travel_times[idx] = demand_travel_time
 
     target_travel_times = {}
     for idx, target_point in target_gdf.iterrows():
-        closest_main_stop = min(main_stops_gdf['nearest_node'],
-                                key=lambda x: nx.shortest_path_length(graph, target_point['nearest_node'], x))
+        closest_main_stop = min(main_stops_gdf['nearest_node'], key=lambda x: nx.shortest_path_length(graph, target_point['nearest_node'], x))
         target_travel_time = nx.shortest_path_length(graph, target_point['nearest_node'], closest_main_stop)
         target_travel_times[idx] = target_travel_time
 

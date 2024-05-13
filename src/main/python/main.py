@@ -12,14 +12,14 @@ def run_simulation(num_simulations):
     # Ergebnisse für den ersten Durchlauf sammeln
     scenario_module.scenario()
     bus_model.busline()
-    ODPT_model.ODPT()
+    ODPT_model.odpt()
     df = results.results()
 
     # Ergebnisse für die weiteren Durchläufe holen und an das DataFrame anhängen
     for _ in range(1, num_simulations):
         scenario_module.scenario()
         bus_model.busline()
-        ODPT_model.ODPT()
+        ODPT_model.odpt()
         current_results = results.results()
         df = pd.concat([df, current_results], ignore_index=True)
 

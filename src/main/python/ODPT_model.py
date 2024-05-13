@@ -6,18 +6,43 @@ from roadmap import load_roadmap
 def odpt():
     ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
     ROOT_Busstations = 'src/main/resources/Buslinie/Busstationen/'
-    ROOT_odpt_stops = 'src/main/resources/odpt/'
+    ROOT_odpt_stops = 'src/main/resources/ODPT/'
     ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
 
     # Strassennetzwerk aus Roadmap laden
-    G = load_roadmap()
+    #G = load_roadmap()
+    north, south, east, west = 47.3876, 47.2521, 8.754, 8.6003
+
+    # Herunterladen des Straßennetzwerks basierend auf dem Rechteck
+    G = ox.graph.graph_from_bbox(north, south, east, west, network_type='drive')
+
+    # Konvertieren des Graphen in ein GeoJSON-FeatureCollection
+    features = ox.graph_to_gdfs(G, nodes=False, edges=True)
+    geojson_data = features.to_json()
+
+    # Bestimmen des relativen Pfads
+    file_path = ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + "strassenetzwerk.geojson"
+
+    # Schreiben den GeoJSON-Daten in die Datei
+    with open(file_path, "w") as f:
+        json.dump(geojson_data, f)
+
+    # impute edge (driving) speeds and calculate edge travel times
+    G = ox.speed.add_edge_speeds(G)
+    G = ox.speed.add_edge_travel_times(G)
+
+    # you can convert MultiDiGraph to/from GeoPandas GeoDataFrames
+    # print(type(G))
+    gdf_nodes, gdf_edges = ox.utils_graph.graph_to_gdfs(G)
+    G = ox.utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=G.graph)
+
 
     # Pfad zur Shapefile-Datei mit den Bushaltestellen
-    shapefile_path = ROOT_FILES + ROOT_odpt_stops + "odptSTOPS.shp"
+    shapefile_path = ROOT_FILES + ROOT_odpt_stops + "ODPTSTOPS.shp"
 
     # Laden der Bushaltestellen als GeoDataFrame
     odpt_stops = gpd.read_file(shapefile_path)
-    #print(odpt_stops)
+    print(odpt_stops)
 
     # Füge die Rückfahrt zu den Stops
     odpt_stops_with_return = add_return_trip(odpt_stops)
@@ -34,6 +59,7 @@ def odpt():
     demand_gdf_wgs84 = demand_gdf.copy()
     target_gdf = gpd.read_file(target_file_path)
     target_gdf_wgs84 = target_gdf.copy()
+    #print(demand_gdf_wgs84)
 
     # Ändere das crs
     odpt_stops_with_return_wgs84 = odpt_stops_with_return.copy()
@@ -98,4 +124,4 @@ def odpt():
 
     return max_passengers, total_distance, total_travel_time, passengers_gdf
 
-#odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt()
+odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt()
