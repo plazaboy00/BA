@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from busline import busline
-from ODPT_model import ODPT
+from ODPT_model import odpt
 
 
 def results():
@@ -13,7 +13,7 @@ def results():
     busline_passengers, busline_km, busline_total_travel_time, bus_passengers_df = busline()
     #print(busline_passengers, busline_km, busline_total_travel_time)
 
-    ODPT_passengers, ODPT_km, ODPT_total_travel_time, ODPT_passengers_df = ODPT()
+    ODPT_passengers, ODPT_km, ODPT_total_travel_time, ODPT_passengers_df = odpt()
     #print(ODPT_passengers, ODPT_km, ODPT_total_travel_time)
 
     mean_travel_time_per_passenger_bus = bus_passengers_df['travel_time'].mean()
