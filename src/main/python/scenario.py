@@ -29,6 +29,28 @@ def scenario():
     ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
     DATEN_STRASSENNETZ = gpd.read_file(ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + 'AlleStrassen.shp')
 
+    # Pfad zur Shapefile-Datei mit den Bushaltestellen
+    ROOT_ODPT_stops = 'src/main/resources/ODPT/'
+    shapefile_path = ROOT_FILES + ROOT_ODPT_stops + "ODPTSTOPS.shp"
+
+    # Laden der Bushaltestellen als GeoDataFrame
+    ODPT_stops = gpd.read_file(shapefile_path)
+
+    # Erstellen der Nachfragepunkte zu den Bahnhöfen
+    gemeinden_zuglinie_Meilen = ['Meilen', 'Zürich', 'Zollikon', 'Küsnacht (ZH)', 'Erlenbach (ZH)', 'Herrliberg',
+                                 'Uetikon am See', 'Männedorf', 'Stäfa', 'Hombrechtikon']
+    zielgemeinden_zuglinie_meilen = ['Meilen', 'Zürich', 'Zollikon', 'Küsnacht (ZH)', 'Erlenbach (ZH)', 'Herrliberg',
+                                     'Uetikon am See', 'Männedorf', 'Stäfa', 'Hombrechtikon']
+    gemeinden_zuglinie_egg = ['Egg', 'Zürich', 'Zollikon', 'Küsnacht (ZH)', 'Maur', 'Zumikon']
+    zielgemeinden_zuglinie_egg = ['Egg', 'Zürich', 'Zollikon', 'Küsnacht (ZH)', 'Maur', 'Zumikon']
+    gemeinden_zuglinie_uster = ['Uster', 'Zürich', 'Dübendorf', 'Greifensee', 'Schwerzenbach', 'Seegräben', 'Wetzikon',
+                                'Bubikon', 'Rüti (ZH)']
+    zielgemeinden_zuglinie_uster = ['Uster', 'Zürich', 'Dübendorf', 'Greifensee', 'Schwerzenbach', 'Seegräben',
+                                    'Wetzikon', 'Bubikon', 'Rüti (ZH)']
+    gewuenschte_kategorien_zuglinie = ['Verkehrsaufkommen']
+    gewuenschte_verkehrsmittel_zuglinie = ['oev']
+    gewuenschtes_jahr_zuglinie = 2018
+
     #Analyse des Verkehrsmodell in den Gemeinden
     gewuenschte_gemeinden = ['Meilen', 'Egg', 'Uster', 'Uetikon am See']
     gewuenschte_zielnamen = ['Meilen', 'Egg', 'Uster', 'Uetikon am See']
@@ -78,6 +100,26 @@ def scenario():
         DATEN_VERKEHRSMODELL, 'Oetwil am See', 'Uster', 'oev', 2018, 'Modal Split'
     )
 
+    DATEN_FILTERED_zuglinie_meilen = filter_data(DATEN_VERKEHRSMODELL, gewuenschtes_jahr_zuglinie,
+                                                 gemeinden_zuglinie_Meilen, zielgemeinden_zuglinie_meilen,
+                                                 gewuenschte_kategorien_zuglinie,
+                                                 gewuenschte_verkehrsmittel_zuglinie)
+    daten_meilen_zuglinie = filter_target_data(DATEN_FILTERED_zuglinie_meilen, 'Meilen')
+    nachfrage_meilen_zuglinie, nachfrage_meilen_zuglinie_bahnhof, \
+        nachfrage_meilen_zentral, nachfrage_meilen_höhere_Dichte, nachfrage_meilen_niedrige_Dichte \
+        = calculate_demand_bahnhof(daten_meilen, daten_meilen_zuglinie, stunden_verkehrstag, \
+                                   prozent_verteilung_hoch, prozent_verteilung_mittel, prozent_verteilung_niedrig)
+
+    DATEN_FILTERED_zuglinie_egg = filter_data(DATEN_VERKEHRSMODELL, gewuenschtes_jahr_zuglinie,
+                                              gemeinden_zuglinie_egg, zielgemeinden_zuglinie_egg,
+                                              gewuenschte_kategorien_zuglinie, gewuenschte_verkehrsmittel_zuglinie)
+    daten_egg_zuglinie = filter_target_data(DATEN_FILTERED_zuglinie_egg, 'Egg')
+
+    DATEN_FILTERED_zuglinie_uster = filter_data(DATEN_VERKEHRSMODELL, gewuenschtes_jahr_zuglinie,
+                                                gemeinden_zuglinie_uster, zielgemeinden_zuglinie_uster,
+                                                gewuenschte_kategorien_zuglinie, gewuenschte_verkehrsmittel_zuglinie)
+    daten_uster_zuglinie = filter_target_data(DATEN_FILTERED_zuglinie_uster, 'Uster')
+
     # Berechne das neue Verkehrsaufkommen für die Gemeinden Meilen und Uetikon
     neues_verkehrsaufkommen_oev_Meilen_Egg = berechne_verkehrsaufkommen(
         Anzahl_Meilen_Egg_oev, Anzahl_Meilen_Egg_miv, modal_split_oev_Oetwil) - Anzahl_Meilen_Egg_oev
@@ -85,23 +127,20 @@ def scenario():
     neues_verkehrsaufkommen_oev_Uetikon_Egg = berechne_verkehrsaufkommen(
         Anzahl_Uetikon_Egg_oev, Anzahl_Uetikon_Egg_miv, modal_split_oev_Oetwil) - Anzahl_Uetikon_Egg_oev
 
+    nachfrage_meilen_zuglinie, nachfrage_meilen_zuglinie_bahnhof, \
+        nachfrage_meilen_zentral, nachfrage_meilen_höhere_Dichte, nachfrage_meilen_niedrige_Dichte \
+        = calculate_demand_bahnhof(daten_meilen, daten_meilen_zuglinie, stunden_verkehrstag, \
+                                   prozent_verteilung_hoch, prozent_verteilung_mittel, prozent_verteilung_niedrig)
 
-    nachfrage_meilen, nachfrage_meilen_zentral,\
-        nachfrage_meilen_höhere_Dichte, nachfrage_meilen_niedrige_Dichte =\
-        calculate_new_demand(daten_meilen, neues_verkehrsaufkommen_oev_Meilen_Egg, stunden_verkehrstag,
-                         prozent_verteilung_hoch, prozent_verteilung_mittel,
-                         prozent_verteilung_niedrig)
-    nachfrage_egg, nachfrage_egg_zentral,\
-        nachfrage_egg_höhere_Dichte, nachfrage_egg_niedrige_Dichte =\
-        calculate_new_demand(daten_egg, neues_verkehrsaufkommen_oev_Meilen_Egg
-                             + neues_verkehrsaufkommen_oev_Uetikon_Egg, stunden_verkehrstag,
-                         prozent_verteilung_hoch, prozent_verteilung_mittel,
-                         prozent_verteilung_niedrig)
-    nachfrage_uster, nachfrage_uster_zentral,\
-        nachfrage_uster_höhere_Dichte, nachfrage_uster_niedrige_Dichte =\
-        calculate_demand(daten_uster, stunden_verkehrstag,
-                         prozent_verteilung_hoch, prozent_verteilung_mittel,
-                         prozent_verteilung_niedrig)
+    nachfrage_egg_zuglinie, nachfrage_egg_zuglinie_bahnhof, \
+        nachfrage_egg_zentral, nachfrage_egg_höhere_Dichte, nachfrage_egg_niedrige_Dichte \
+        = calculate_demand_bahnhof(daten_egg, daten_egg_zuglinie, stunden_verkehrstag, \
+                                   prozent_verteilung_hoch, prozent_verteilung_mittel, prozent_verteilung_niedrig)
+
+    nachfrage_uster_zuglinie, nachfrage_uster_zuglinie_bahnhof, \
+        nachfrage_uster_zentral, nachfrage_uster_höhere_Dichte, nachfrage_uster_niedrige_Dichte \
+        = calculate_demand_bahnhof(daten_uster, daten_uster_zuglinie, stunden_verkehrstag, \
+                                   prozent_verteilung_hoch, prozent_verteilung_mittel, prozent_verteilung_niedrig)
 
     nachfrage_uetikon, nachfrage_uetikon_zentral,\
         nachfrage_uetikon_höhere_Dichte, nachfrage_uetikon_niedrige_Dichte =\
@@ -115,30 +154,35 @@ def scenario():
 
     # Verteile die Nachfragepunkte in den Gemeinden
     (nachfrage_meilen_zentral_pos, nachfrage_meilen_zentral_timestamps), \
-    (nachfrage_meilen_höhere_Dichte_pos, nachfrage_meilen_höhere_Dichte_timestamps), \
-    (nachfrage_meilen_niedrige_Dichte_pos, nachfrage_meilen_niedrige_Dichte_timestamps) = \
-        verteile_nachfragepunkte('Meilen', nachfrage_meilen_zentral,
+        (nachfrage_meilen_höhere_Dichte_pos, nachfrage_meilen_höhere_Dichte_timestamps), \
+        (nachfrage_meilen_niedrige_Dichte_pos, nachfrage_meilen_niedrige_Dichte_timestamps), \
+        nachfragepunkte_bahnhof_timestamps = \
+        verteile_nachfragepunkte_bahnhof('Meilen', nachfrage_meilen_zentral,
                                  nachfrage_meilen_höhere_Dichte,
                                  nachfrage_meilen_niedrige_Dichte,
+                                 nachfrage_meilen_zuglinie_bahnhof,
                                  gdf_zentrale_Dichte, gdf_hohe_Dichte,
                                  gdf_tiefe_Dichte, start_timestamp, end_timestamp)
 
-
     (nachfrage_egg_zentral_pos, nachfrage_egg_zentral_timestamps), \
-    (nachfrage_egg_höhere_Dichte_pos, nachfrage_egg_höhere_Dichte_timestamps), \
-    (nachfrage_egg_niedrige_Dichte_pos, nachfrage_egg_niedrige_Dichte_timestamps) = \
-        verteile_nachfragepunkte('Egg', nachfrage_egg_zentral,
+        (nachfrage_egg_höhere_Dichte_pos, nachfrage_egg_höhere_Dichte_timestamps), \
+        (nachfrage_egg_niedrige_Dichte_pos, nachfrage_egg_niedrige_Dichte_timestamps), \
+        nachfragepunkte_bahnhof_timestamps = \
+        verteile_nachfragepunkte_bahnhof('Egg', nachfrage_egg_zentral,
                                  nachfrage_egg_höhere_Dichte,
                                  nachfrage_egg_niedrige_Dichte,
+                                 nachfrage_egg_zuglinie_bahnhof,
                                  gdf_zentrale_Dichte, gdf_hohe_Dichte,
                                  gdf_tiefe_Dichte, start_timestamp, end_timestamp)
 
     (nachfrage_uster_zentral_pos, nachfrage_uster_zentral_timestamps), \
-    (nachfrage_uster_höhere_Dichte_pos, nachfrage_uster_höhere_Dichte_timestamps), \
-    (nachfrage_uster_niedrige_Dichte_pos, nachfrage_uster_niedrige_Dichte_timestamps) = \
-        verteile_nachfragepunkte('Uster', nachfrage_uster_zentral,
+        (nachfrage_uster_höhere_Dichte_pos, nachfrage_uster_höhere_Dichte_timestamps), \
+        (nachfrage_uster_niedrige_Dichte_pos, nachfrage_uster_niedrige_Dichte_timestamps), \
+        nachfragepunkte_bahnhof_timestamps = \
+        verteile_nachfragepunkte_bahnhof('Uster', nachfrage_uster_zentral,
                                  nachfrage_uster_höhere_Dichte,
                                  nachfrage_uster_niedrige_Dichte,
+                                 nachfrage_uster_zuglinie_bahnhof,
                                  gdf_zentrale_Dichte, gdf_hohe_Dichte,
                                  gdf_tiefe_Dichte, start_timestamp, end_timestamp)
 
@@ -152,22 +196,26 @@ def scenario():
                                     gdf_tiefe_Dichte, start_timestamp, end_timestamp)
 
     # Rufe die Funktion auf, um die Daten vorzubereiten
-    meilen_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
+    meilen_punkte_df = prepare_demand_data_bahnhof(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
                                            nachfrage_meilen_zentral_pos, nachfrage_meilen_höhere_Dichte_pos,
                                            nachfrage_meilen_niedrige_Dichte_pos, nachfrage_meilen_zentral_timestamps,
-                                           nachfrage_meilen_höhere_Dichte_timestamps, nachfrage_meilen_niedrige_Dichte_timestamps,
-                                           'Meilen')
-    egg_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
-                                           nachfrage_egg_zentral_pos, nachfrage_egg_höhere_Dichte_pos,
-                                           nachfrage_egg_niedrige_Dichte_pos, nachfrage_egg_zentral_timestamps,
-                                           nachfrage_egg_höhere_Dichte_timestamps, nachfrage_egg_niedrige_Dichte_timestamps,
-                                           'Egg')
+                                           nachfrage_meilen_höhere_Dichte_timestamps,
+                                           nachfrage_meilen_niedrige_Dichte_timestamps,
+                                           'Meilen', ODPT_stops, nachfragepunkte_bahnhof_timestamps)
 
-    uster_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
-                                           nachfrage_uster_zentral_pos, nachfrage_uster_höhere_Dichte_pos,
-                                           nachfrage_uster_niedrige_Dichte_pos, nachfrage_uster_zentral_timestamps,
-                                           nachfrage_uster_höhere_Dichte_timestamps, nachfrage_uster_niedrige_Dichte_timestamps,
-                                          'Uster')
+    egg_punkte_df = prepare_demand_data_bahnhof(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
+                                        nachfrage_egg_zentral_pos, nachfrage_egg_höhere_Dichte_pos,
+                                        nachfrage_egg_niedrige_Dichte_pos, nachfrage_egg_zentral_timestamps,
+                                        nachfrage_egg_höhere_Dichte_timestamps,
+                                        nachfrage_egg_niedrige_Dichte_timestamps,
+                                        'Egg', ODPT_stops, nachfragepunkte_bahnhof_timestamps)
+
+    uster_punkte_df = prepare_demand_data_bahnhof(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
+                                          nachfrage_uster_zentral_pos, nachfrage_uster_höhere_Dichte_pos,
+                                          nachfrage_uster_niedrige_Dichte_pos, nachfrage_uster_zentral_timestamps,
+                                          nachfrage_uster_höhere_Dichte_timestamps,
+                                          nachfrage_uster_niedrige_Dichte_timestamps,
+                                          'Uster', ODPT_stops, nachfragepunkte_bahnhof_timestamps)
 
     uetikon_punkte_df = prepare_demand_data(gdf_zentrale_Dichte, gdf_hohe_Dichte, gdf_tiefe_Dichte,
                                            nachfrage_uetikon_zentral_pos, nachfrage_uetikon_höhere_Dichte_pos,
@@ -179,17 +227,17 @@ def scenario():
     alle_punkte_df = pd.concat([egg_punkte_df, uster_punkte_df, meilen_punkte_df, uetikon_punkte_df], ignore_index=True)
     alle_punkte_df_with_passenger_numbers = add_passenger_numbers(alle_punkte_df)
 
-    alle_punkte_df_with_passenger_numbers.to_file(ROOT_FILES + ROOT_DOCS + "Nachfrage.geojson", driver='GeoJSON')
+    alle_punkte_df_with_passenger_numbers.to_file(ROOT_FILES + ROOT_DOCS + "Nachfrage_bahnhof.geojson", driver='GeoJSON')
 
     # Plotten der Nachfrageverteilung
     #plot_demand_distribution(DATEN_GEMEINDENGRENZEN, gdf_zentrale_Dichte,
     # gdf_hohe_Dichte, gdf_tiefe_Dichte,
     # DATEN_STRASSENNETZ, alle_punkte_df_with_passenger_numbers)
     # Beispielaufruf:
-    new_destination_gdf = create_destination_gdf(alle_punkte_df_with_passenger_numbers, gdf_zentrale_Dichte, gdf_hohe_Dichte,
-                                                 gdf_tiefe_Dichte)
+    new_destination_gdf = create_destination_zuglinie_gdf(alle_punkte_df_with_passenger_numbers, gdf_zentrale_Dichte, gdf_hohe_Dichte,
+                                                 gdf_tiefe_Dichte, ODPT_stops)
     # Speichern der GeoDataFrame als GeoJSON-Datei
-    new_destination_gdf.to_file(ROOT_FILES + ROOT_DOCS + "Ziele.geojson", driver='GeoJSON')
+    new_destination_gdf.to_file(ROOT_FILES + ROOT_DOCS + "Ziele_bahnhof.geojson", driver='GeoJSON')
 
     # Anwenden der Funktion für das Hinzufügen von Zielspalten
     output_gdf = add_destination_columns(alle_punkte_df_with_passenger_numbers, gdf_zentrale_Dichte,
@@ -205,5 +253,5 @@ def scenario():
     # DATEN_STRASSENNETZ, destination_gdf)
 
 
-#scenario()
+scenario()
 
