@@ -10,7 +10,7 @@ def odpt():
     ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
 
     # Strassennetzwerk aus Roadmap laden
-    #G = load_roadmap()
+    # G = load_roadmap()
     north, south, east, west = 47.3876, 47.2521, 8.754, 8.6003
 
     # Herunterladen des Straßennetzwerks basierend auf dem Rechteck
@@ -36,7 +36,6 @@ def odpt():
     gdf_nodes, gdf_edges = ox.utils_graph.graph_to_gdfs(G)
     G = ox.utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=G.graph)
 
-
     # Pfad zur Shapefile-Datei mit den Bushaltestellen
     shapefile_path = ROOT_FILES + ROOT_odpt_stops + "ODPTSTOPS.shp"
 
@@ -49,17 +48,17 @@ def odpt():
 
     # Lade die Nachfrage und Ziel Punkte
     ROOT_DOCS = 'src/main/resources/Dokumente/'
-    #file_path = ROOT_FILES + ROOT_DOCS + "Nachfrage.geojson"
-    #demand_geojson = load_geojson(file_path)
-    #file_path = ROOT_FILES + ROOT_DOCS + "Ziele.geojson"
-    #destination_geojson = load_geojson(file_path)
-    demand_file_path = ROOT_FILES + ROOT_DOCS + "Nachfrage.geojson"
-    target_file_path = ROOT_FILES + ROOT_DOCS + "Ziele.geojson"
+    # file_path = ROOT_FILES + ROOT_DOCS + "Nachfrage.geojson"
+    # demand_geojson = load_geojson(file_path)
+    # file_path = ROOT_FILES + ROOT_DOCS + "Ziele.geojson"
+    # destination_geojson = load_geojson(file_path)
+    demand_file_path = ROOT_FILES + ROOT_DOCS + "Nachfrage_neu.geojson"
+    target_file_path = ROOT_FILES + ROOT_DOCS + "Ziele_neu.geojson"
     demand_gdf = gpd.read_file(demand_file_path)
     demand_gdf_wgs84 = demand_gdf.copy()
     target_gdf = gpd.read_file(target_file_path)
     target_gdf_wgs84 = target_gdf.copy()
-    #print(demand_gdf_wgs84)
+    # print(demand_gdf_wgs84)
 
     # Ändere das crs
     odpt_stops_with_return_wgs84 = odpt_stops_with_return.copy()
@@ -75,7 +74,7 @@ def odpt():
                         odpt_stops_with_return_wgs84, odpt_stops_wgs84, G)
 
     # Sortiere, die Nachfrage punkte nach ihrer Effizienz / Entfernung
-    sorted_demand_gdf, sorted_target_gdf = sort_demand_target_nodes\
+    sorted_demand_gdf, sorted_target_gdf = sort_demand_target_nodes \
         (G, demand_gdf, target_gdf, main_stops_gdf)
 
     # Füge die section zu den Nachfrage- und Ziel Punkten dazu
@@ -85,8 +84,9 @@ def odpt():
 
     # Annahme setze die maximale Reisezeit pro Abschnitt auf 15 Minuten
     max_travel_time_per_section = 900  # 15 Minuten
+    start_timestamp = pd.Timestamp('2018-04-20 09:05:00')
     sorted_section_trip_points, successful_trips, passengers_gdf = process_demand_points\
-        (demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, G)
+        (demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, start_timestamp, G)
     print(sorted_section_trip_points)
     print('Erfolgreiche Trips:', successful_trips)
 
@@ -112,7 +112,6 @@ def odpt():
     travel_distance3 = calculate_route_travel_distance(route3, G)
     travel_distance4 = calculate_route_travel_distance(route4, G)
 
-
     total_travel_time = (travel_time1 + travel_time2 + travel_time3 + travel_time4) / 60
     print('Gesamtreisezeit in Minuten:', total_travel_time)
 
@@ -124,4 +123,5 @@ def odpt():
 
     return max_passengers, total_distance, total_travel_time, passengers_gdf
 
-odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt()
+
+#odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt()

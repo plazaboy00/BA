@@ -8,6 +8,7 @@ from shapely.ops import nearest_points
 from shapely.geometry import Point
 import osmnx as ox
 import json
+from datetime import datetime, timedelta
 
 
 def add_return_trip(odpt_stops):
@@ -298,15 +299,18 @@ def validate_nodes_in_data(nodes, main_stop_nodes, passengers_gdf):
 
 # Hauptfunktion von odpt
 
-def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_travel_time_per_section, G):
+def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_travel_time_per_section, start_timestamp, G):
     successful_trips = 0
     passengers = []
     section_trip_points = create_section_trip_points(main_stop_nodes)
+    bus_timestamp = start_timestamp
 
     # Iteriere über die Nachfrageknoten
     for demand_index, demand_row in demand_nodes.iterrows():
         demand_node = demand_row['nearest_node']
         demand_start_stop, demand_end_stop = demand_row['section']
+        demand_timestamp = demand_row['timestamp']
+        #print(demand_timestamp)
 
         # Suche den Start-Hauptknoten des Demand-Knotens
         demand_start_stop_row = main_stop_nodes.loc[main_stop_nodes.index == demand_start_stop]
@@ -323,10 +327,21 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
 
         # Überprüfe, ob die Reisezeit pro Abschnitt die maximale Reisezeit pro Abschnitt überschreitet
         travel_time = calculate_travel_time_for_updated_section(demand_node, section_trip_points, G)
+        #print(travel_time)
         if travel_time > max_travel_time_per_section:
             section_trip_points = remove_demand_node_from_sublist(nearest_node_demand_start, nearest_node_demand_end,
                                                                   demand_node, section_trip_points)
             continue
+
+        # Überprüfe, ob der demand_node in der vorgegebenen Zeit abgeholt werden kann
+        arrival_time = bus_timestamp + timedelta(seconds=travel_time)
+        start_buffer = arrival_time - timedelta(minutes=10)
+        end_buffer = arrival_time + timedelta(minutes=10)
+        if demand_timestamp < start_buffer or demand_timestamp > end_buffer:
+            section_trip_points = remove_demand_node_from_sublist(nearest_node_demand_start, nearest_node_demand_end,
+                                                                  demand_node, section_trip_points)
+            continue
+
 
         # Finde die zugehörigen Zielknoten für diesen Demand-Knoten
         corresponding_target_node = target_nodes.loc[
@@ -334,6 +349,11 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         section_tuple = corresponding_target_node['section'].values[0]
         target_start_stop, target_end_stop = section_tuple
         target_node = corresponding_target_node['nearest_node'].values[0]
+
+        # Überprüfe, ob der demand und der target Knoten dieselben sind
+        if demand_node == target_node:
+            print('Der Demand- und Zielknoten sind identisch')
+            continue
 
         # Suche den Start-Hauptknoten des Ziel-Knotens
         target_start_stop_row = main_stop_nodes.loc[main_stop_nodes.index == target_start_stop]
@@ -376,6 +396,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
             'origin': demand_node,
             'destination': target_node,
             'id:': demand_row['passagier_nummer'] - 1,
+            'timestamp': demand_timestamp
         })
     # Erstelle gdf aus den Passagier Daten
     passengers_gdf = gpd.GeoDataFrame(passengers)
@@ -396,12 +417,21 @@ def calculate_passenger_travel_time(sorted_section_trip_points, graph, passenger
 
         # Erstelle die Route für den Passagier
         route = []
+        found_origin = False
+
         for point in flattened_route:
             if point == origin:
+                # Falls der Origin Punkt gefunden wird, leere die Route und füge den Origin Punkt hinzu
+                route = [point]
+                found_origin = True
+            elif found_origin:
                 route.append(point)
-            elif point == destination:
-                route.append(point)
-                break
+                if point == destination:
+                    break
+
+        # Sicherstellen, dass die Route sowohl den Ursprung als auch das Ziel enthält
+        if not route or route[0] != origin or route[-1] != destination:
+            raise ValueError("Ungültige Route: Zielpunkt kommt vor dem Ursprungspunkt oder Route ist ungültig.")
 
         # Berechne die Reisezeit entlang der Route
         travel_time = 0

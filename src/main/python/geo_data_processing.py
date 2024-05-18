@@ -446,3 +446,106 @@ def create_destination_zuglinie_gdf(input_gdf, gemeinden_zentral_gdfs, gemeinden
     destination_gdf = gpd.GeoDataFrame(new_rows_df, geometry='geometry')
 
     return destination_gdf
+
+def create_destination_zuglinie_gdf_neu(input_gdf, gemeinden_zentral_gdfs, gemeinden_höhere_Dichte_gdfs,
+                                    gemeinden_niedrige_Dichte_gdfs, bahnhöfe_gdf):
+    # Extrahiere die eindeutigen Gemeinden aus dem GeoDataFrame
+    gemeinden = input_gdf['gemeinde'].unique()
+
+    # Erstelle ein leeres DataFrame, um die neuen Zeilen hinzuzufügen
+    new_rows = []
+
+    # Erstelle ein Dictionary, um das Kontingent für jede Zielgemeinde zu verfolgen
+    kontingent_dict = {gemeinde: len(gemeinde_gdf) for gemeinde, gemeinde_gdf in input_gdf.groupby('gemeinde')}
+
+    # Erstelle ein Dictionary, um das Kontingent für die Bahnhöfe zu verfolgen
+    bahnhof_kontingent_dict = {row['geometry']: len(input_gdf[input_gdf['geometry'] == row['geometry']]) for _, row in
+                               bahnhöfe_gdf.iterrows()}
+
+    # Iteriere über jede Gemeinde und zähle die Punkte
+    for gemeinde in gemeinden:
+        # Filtere das GeoDataFrame nach der aktuellen Gemeinde
+        gemeinde_gdf = input_gdf[input_gdf['gemeinde'] == gemeinde]
+
+        # Generiere die Zielpunkte für jeden Punkt in dieser Gemeinde
+        for index, row in gemeinde_gdf.iterrows():
+            # Überprüfe, ob der aktuelle Punkt ein Bahnhofspunkt ist
+            if row['geometry'] in bahnhof_kontingent_dict and bahnhof_kontingent_dict[row['geometry']] > 0:
+                # Zufällig entscheiden, ob der Punkt auf dem Bahnhof oder in der Zone verteilt wird
+                if np.random.rand() < 0.5:
+                    # Punkt kann nicht auf demselben Bahnhof bleiben, also wird er in den Zonen verteilt
+                    remaining_gemeinden = [g for g in gemeinden if g != gemeinde and kontingent_dict[g] > 0]
+                    if len(remaining_gemeinden) > 0:
+                        ziel_gemeinde = np.random.choice(remaining_gemeinden)
+                        kontingent_dict[ziel_gemeinde] -= 1
+
+                        ziel_gemeinde_gdf = gemeinden_zentral_gdfs if ziel_gemeinde in gemeinden_zentral_gdfs[
+                            'GEMEINDE'].values \
+                            else (gemeinden_höhere_Dichte_gdfs if ziel_gemeinde in gemeinden_höhere_Dichte_gdfs[
+                            'GEMEINDE'].values else gemeinden_niedrige_Dichte_gdfs)
+
+                        ziel_punkt_index = np.random.choice(
+                            ziel_gemeinde_gdf[ziel_gemeinde_gdf['GEMEINDE'] == ziel_gemeinde].index)
+                        ziel_punkt = ziel_gemeinde_gdf.loc[ziel_punkt_index, 'geometry'].centroid
+                    else:
+                        ziel_punkt = row['geometry']  # Wenn keine Zielgemeinden mehr übrig sind
+                else:
+                    # Punkt bleibt auf dem Bahnhof, aber nicht derselbe Bahnhof
+                    other_bahnhof_geometries = [g for g in bahnhof_kontingent_dict.keys() if g != row['geometry'] and bahnhof_kontingent_dict[g] > 0]
+                    if len(other_bahnhof_geometries) > 0:
+                        ziel_punkt = np.random.choice(other_bahnhof_geometries)
+                    else:
+                        remaining_gemeinden = [g for g in gemeinden if kontingent_dict[g] > 0]
+                        if len(remaining_gemeinden) > 0:
+                            ziel_gemeinde = np.random.choice(remaining_gemeinden)
+                            kontingent_dict[ziel_gemeinde] -= 1
+
+                            ziel_gemeinde_gdf = gemeinden_zentral_gdfs if ziel_gemeinde in gemeinden_zentral_gdfs[
+                                'GEMEINDE'].values \
+                                else (gemeinden_höhere_Dichte_gdfs if ziel_gemeinde in gemeinden_höhere_Dichte_gdfs[
+                                'GEMEINDE'].values else gemeinden_niedrige_Dichte_gdfs)
+
+                            ziel_punkt_index = np.random.choice(
+                                ziel_gemeinde_gdf[ziel_gemeinde_gdf['GEMEINDE'] == ziel_gemeinde].index)
+                            ziel_punkt = ziel_gemeinde_gdf.loc[ziel_punkt_index, 'geometry'].centroid
+                        else:
+                            ziel_punkt = row['geometry']
+
+                bahnhof_kontingent_dict[row['geometry']] -= 1
+            else:
+                # Überprüfe, ob es noch Zielgemeinden mit nicht erschöpftem Kontingent gibt
+                remaining_gemeinden = [g for g in gemeinden if g != gemeinde and kontingent_dict[g] > 0]
+                if len(remaining_gemeinden) == 0:
+                    break  # Beende die Schleife, wenn alle Kontingente erschöpft sind
+
+                # Wähle eine Zielgemeinde aus den verbleibenden aus
+                ziel_gemeinde = np.random.choice(remaining_gemeinden)
+
+                # Reduziere das Kontingent für die Zielgemeinde um 1
+                kontingent_dict[ziel_gemeinde] -= 1
+
+                # Zufällige Auswahl eines Zielpunktes in der Zielgemeinde
+                ziel_gemeinde_gdf = gemeinden_zentral_gdfs if ziel_gemeinde in gemeinden_zentral_gdfs['GEMEINDE'].values \
+                    else (gemeinden_höhere_Dichte_gdfs if ziel_gemeinde in gemeinden_höhere_Dichte_gdfs[
+                    'GEMEINDE'].values else gemeinden_niedrige_Dichte_gdfs)
+
+                ziel_punkt_index = np.random.choice(
+                    ziel_gemeinde_gdf[ziel_gemeinde_gdf['GEMEINDE'] == ziel_gemeinde].index)
+                ziel_punkt = ziel_gemeinde_gdf.loc[ziel_punkt_index, 'geometry'].centroid
+
+            # Erstelle eine Passagier-Nummer für jeden Punkt (aufsteigend)
+            passagier_nummer = len(new_rows) + 1  # Aufsteigende Passagier-Nummer
+
+            # Füge den Zielpunkt als neue Zeile zum DataFrame hinzu
+            new_rows.append({'geometry': ziel_punkt,
+                             'gemeinde': ziel_gemeinde if row['geometry'] not in bahnhof_kontingent_dict else gemeinde,
+                             'passagier_nummer': passagier_nummer})
+
+    # Konvertiere die neuen Zeilen in ein DataFrame
+    new_rows_df = pd.DataFrame(new_rows)
+
+    # Erstelle ein GeoDataFrame aus den neuen Zeilen
+    destination_gdf = gpd.GeoDataFrame(new_rows_df, geometry='geometry')
+
+    return destination_gdf
+
