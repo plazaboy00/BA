@@ -12,9 +12,11 @@ def results():
 
     busline_passengers, busline_km, busline_total_travel_time, bus_passengers_df = busline()
     #print(busline_passengers, busline_km, busline_total_travel_time)
+    income_bus_per_h = bus_passengers_df['income'].sum()
 
     ODPT_passengers, ODPT_km, ODPT_total_travel_time, ODPT_passengers_df = odpt()
     #print(ODPT_passengers, ODPT_km, ODPT_total_travel_time)
+    income_ODPT_per_h = ODPT_passengers_df['income'].sum()
 
     mean_travel_time_per_passenger_bus = bus_passengers_df['travel_time'].mean()
     mean_travel_time_per_passenger_ODPT = ODPT_passengers_df['travel_time'].mean()
@@ -24,10 +26,12 @@ def results():
         "busline_passengers": busline_passengers,
         "busline_total_travel_time": busline_total_travel_time,
         "mean_travel_time_per_passenger_bus": mean_travel_time_per_passenger_bus,
+        "income_bus_per_h": income_bus_per_h,
         "ODPT_km": ODPT_km,
         "ODPT_passengers": ODPT_passengers,
         "ODPT_total_travel_time": ODPT_total_travel_time,
-        "mean_travel_time_per_passenger_ODPT": mean_travel_time_per_passenger_ODPT
+        "mean_travel_time_per_passenger_ODPT": mean_travel_time_per_passenger_ODPT,
+        "income_ODPT_per_h": income_ODPT_per_h,
     }
 
     # Erstelle einen DataFrame aus den Daten
@@ -47,18 +51,14 @@ def costs(df):
 
         return costs
 
-    def income_per_passenger(num_passenger):
+    def total_income(mean_income_per_h):
         h_per_day = 12
         days_per_year = 365
-        price = 5  # CHF per trip
-        income_per_p = num_passenger * price
-        mean_p = np.mean(num_passenger)
-        p_per_a = mean_p * h_per_day * days_per_year
-        income_per_a = p_per_a * income_per_p
-
+        income_per_a = mean_income_per_h * h_per_day * days_per_year
         return income_per_a
 
     df = df
+    print('dataframe', df)
     total_km_bus = df['busline_km'].sum()
     total_km_ODPT = df['ODPT_km'].sum()
 
@@ -71,13 +71,11 @@ def costs(df):
     total_passenger_bus = df['busline_passengers'].sum()
     total_passenger_ODPT = df['ODPT_passengers'].sum()
 
-    bus_income = income_per_passenger(total_passenger_bus)
-    ODPT_income = income_per_passenger(total_passenger_ODPT)
+    mean_income_bus = df['income_bus_per_h'].mean()
+    mean_income_ODPT = df['income_ODPT_per_h'].mean()
 
-
-
-
-
+    bus_income = total_income(mean_income_bus)
+    ODPT_income = total_income(mean_income_ODPT)
 
     data = {
         "Bus costs": bus_costs,
@@ -131,4 +129,7 @@ def value_created(df):
 
     return df
 
+#current_results = results()
+#costs = costs(current_results)
+#value = value_created(current_results)
 

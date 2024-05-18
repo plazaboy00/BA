@@ -1,5 +1,6 @@
 from ODPT_functions import *
 from plot import *
+from bus_functions import add_zones_to_gdf, calculate_income
 from roadmap import load_roadmap
 
 
@@ -52,8 +53,8 @@ def odpt():
     # demand_geojson = load_geojson(file_path)
     # file_path = ROOT_FILES + ROOT_DOCS + "Ziele.geojson"
     # destination_geojson = load_geojson(file_path)
-    demand_file_path = ROOT_FILES + ROOT_DOCS + "Nachfrage_neu.geojson"
-    target_file_path = ROOT_FILES + ROOT_DOCS + "Ziele_neu.geojson"
+    demand_file_path = ROOT_FILES + ROOT_DOCS + "Nachfrage_bahnhof.geojson"
+    target_file_path = ROOT_FILES + ROOT_DOCS + "Ziele_bahnhof.geojson"
     demand_gdf = gpd.read_file(demand_file_path)
     demand_gdf_wgs84 = demand_gdf.copy()
     target_gdf = gpd.read_file(target_file_path)
@@ -90,7 +91,10 @@ def odpt():
     print(sorted_section_trip_points)
     print('Erfolgreiche Trips:', successful_trips)
 
+    # Berechne die travel time der Passagiere, deren Zonen und die Einnahmen
     passengers_gdf = calculate_passenger_travel_time(sorted_section_trip_points, G, passengers_gdf)
+    passengers_gdf = add_zones_to_gdf(passengers_gdf)
+    passengers_gdf = calculate_income(passengers_gdf)
     print(passengers_gdf)
 
     # Unterteile die Nodes in die Sektoren

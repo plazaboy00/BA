@@ -54,8 +54,8 @@ def busline():
     # Plotten der Routen auf dem Straßennetzwerk
     # plot_routes(G, routes)
 
-    file_path_demand = ROOT_FILES + ROOT_DOCS + "Nachfrage.geojson"
-    file_path_destination = ROOT_FILES + ROOT_DOCS + "Ziele.geojson"
+    file_path_demand = ROOT_FILES + ROOT_DOCS + "Nachfrage_bahnhof.geojson"
+    file_path_destination = ROOT_FILES + ROOT_DOCS + "Ziele_bahnhof.geojson"
     demand_geojson = load_geojson(file_path_demand)
     destination_geojson = load_geojson(file_path_destination)
 
@@ -65,7 +65,7 @@ def busline():
 
     # Berechne die Reisezeit der Passagiere
     passengers_gdf = compute_travel_time(passengers_gdf)
-    # print(passengers_gdf)
+    print(passengers_gdf)
 
     # Berechne die Gesamtreisezeit
     total_travel_time = compute_travel_time_bus(busstops_with_time)
@@ -79,8 +79,16 @@ def busline():
     num_passengers = count_passengers(passengers_gdf)
     print("Anzahl der Passagiere im Bus:", num_passengers)
 
+    # Füge die Anzahl an Zonen in gdf dazu
+    passengers_gdf = add_zones_to_gdf(passengers_gdf)
+
+    # Berechne die Einnahmen für jeden Passagier
+    passengers_gdf = calculate_income(passengers_gdf)
+
     print(passengers_gdf)
 
     return num_passengers, total_route_length, total_travel_time, passengers_gdf
 
 #busline_passengers, busline_km, busline_total_travel_time, passenger_gdf = busline()
+#print(busline_km)
+#print(type(busline_km))

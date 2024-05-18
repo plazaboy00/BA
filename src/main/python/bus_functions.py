@@ -12,28 +12,34 @@ from datetime import datetime, timedelta
 lv95 = pyproj.Proj(init='epsg:2056')
 wgs84 = pyproj.Proj(init='epsg:4326')
 
+
 # Funktion zur Konvertierung von LV95 nach WGS84
 def lv95_to_wgs84(point):
     x_lv95, y_lv95 = point.x, point.y
     x_wgs84, y_wgs84 = pyproj.transform(lv95, wgs84, x_lv95, y_lv95)
     return Point(x_wgs84, y_wgs84)
 
+
 # Funktion zum Laden des Straßennetzwerks
 def load_street_network(north, south, east, west):
     return ox.graph.graph_from_bbox(north, south, east, west, network_type='drive')
 
+
 # Funktion zum Speichern des Straßennetzwerks als GeoPackage
 def save_street_network(G, filepath):
     ox.io.save_graph_geopackage(G, filepath)
+
 
 # Funktion zum Hinzufügen der Rückfahrt-Haltestellen
 def add_return_trip(bus_stops):
     return_trip_stops = bus_stops.iloc[:-1].iloc[::-1]
     return pd.concat([bus_stops, return_trip_stops], ignore_index=True)
 
+
 # Funktion zur Bestimmung des nächsten Netzwerkknotens zu einem Punkt
 def get_nearest_node(G, point):
     return ox.distance.nearest_nodes(G, point.x, point.y)
+
 
 # Funktion zum Berechnen des kürzesten Pfads zwischen den Haltestellen
 def compute_shortest_paths(G, points_gdf, start_time):
@@ -78,53 +84,6 @@ def load_geojson(file_path):
         data = json.load(f)
     return data
 
-def passengers_on_bus(bus_stops_gdf, demand_geojson, destination_geojson):
-    passengers = []
-    bus_stop_coords = [(point.x, point.y) for point in bus_stops_gdf.geometry]
-    bus_stop_times = list(bus_stops_gdf['ankunftszeit'])
-
-    for demand_feature, dest_feature in zip(demand_geojson['features'], destination_geojson['features']):
-        passenger_origin = Point(demand_feature['geometry']['coordinates'])
-        passenger_destination = Point(dest_feature['geometry']['coordinates'])
-        passenger_time = datetime.strptime(demand_feature['properties']['timestamp'], '%Y-%m-%dT%H:%M:%S')
-        #print(passenger_time)
-
-        origin_in_buffer = False
-        destination_in_buffer = False
-
-        for coord, stop_time in zip(bus_stop_coords, bus_stop_times):
-            bus_stop_point = Point(coord)
-            start_buffer = stop_time - timedelta(minutes=10)
-            #print('startbuffer', start_buffer)
-            end_buffer = stop_time + timedelta(minutes=10)
-            #print('endbuffer', end_buffer)
-
-            if bus_stop_point.buffer(500).contains(passenger_origin) and start_buffer <= passenger_time <= end_buffer:
-                origin_in_buffer = True
-                start = bus_stop_point
-                start_time = stop_time
-
-            if bus_stop_point.buffer(500).contains(passenger_destination) and start_buffer <= passenger_time <= end_buffer:
-                destination_in_buffer = True
-                end = bus_stop_point
-                end_time = stop_time
-
-            if origin_in_buffer and destination_in_buffer:
-                #print('origin:', passenger_origin)
-                passengers.append({
-                    'origin': passenger_origin,
-                    'destination': passenger_destination,
-                    'start': start,
-                    'end': end,
-                    'stoptime start': start_time,
-                    'stoptime end': end_time,
-                    'timestamp': passenger_time
-                })
-                print(passenger_origin)
-                break
-    #print(passengers)
-    passengers_gdf = gpd.GeoDataFrame(passengers, geometry='origin')
-    return passengers_gdf
 
 def compute_travel_time(passengers_gdf):
     travel_times = []
@@ -136,6 +95,61 @@ def compute_travel_time(passengers_gdf):
 
     passengers_gdf['travel_time'] = travel_times
     return passengers_gdf
+
+
+def passengers_on_bus(bus_stops_gdf, demand_geojson, destination_geojson):
+    passengers = []
+    bus_stop_coords = [(point.x, point.y) for point in bus_stops_gdf.geometry]
+    bus_stop_times = list(bus_stops_gdf['ankunftszeit'])
+
+    for demand_feature, dest_feature in zip(demand_geojson['features'], destination_geojson['features']):
+        passenger_origin = Point(demand_feature['geometry']['coordinates'])
+        start_gemeinde = demand_feature['properties']['gemeinde']
+        passenger_destination = Point(dest_feature['geometry']['coordinates'])
+        end_gemeinde = dest_feature['properties']['gemeinde']
+        passenger_time = datetime.strptime(demand_feature['properties']['timestamp'], '%Y-%m-%dT%H:%M:%S')
+
+        origin_in_buffer = False
+        destination_in_buffer = False
+        start = None
+        end = None
+        start_time = None
+        end_time = None
+
+        for coord, stop_time in zip(bus_stop_coords, bus_stop_times):
+            bus_stop_point = Point(coord)
+            start_buffer = stop_time - timedelta(minutes=10)
+            end_buffer = stop_time + timedelta(minutes=10)
+
+            if bus_stop_point.buffer(500).contains(passenger_origin) and start_buffer <= passenger_time <= end_buffer:
+                origin_in_buffer = True
+                start = bus_stop_point
+                start_time = stop_time
+
+            if bus_stop_point.buffer(500).contains(passenger_destination) and start_buffer <= passenger_time <= end_buffer:
+                destination_in_buffer = True
+                end = bus_stop_point
+                end_time = stop_time
+
+            # Überprüfen, ob die Start- und Endpunkte unterschiedliche Bushaltestellen sind und die Startzeit vor der Endzeit liegt
+            if origin_in_buffer and destination_in_buffer and start != end and start_time < end_time:
+                passengers.append({
+                    'origin': passenger_origin,
+                    'start gemeinde': start_gemeinde,
+                    'destination': passenger_destination,
+                    'end gemeinde': end_gemeinde,
+                    'start': start,
+                    'end': end,
+                    'stoptime start': start_time,
+                    'stoptime end': end_time,
+                    'timestamp': passenger_time
+                })
+                break
+
+    passengers_gdf = gpd.GeoDataFrame(passengers, geometry='origin')
+    return passengers_gdf
+
+
 
 def compute_travel_time_bus(busstops_with_time):
     # Konvertieren der 'timestamp'-Spalte in datetime-Objekte
@@ -149,6 +163,31 @@ def compute_travel_time_bus(busstops_with_time):
     travel_time = last_timestamp - first_timestamp
 
     return travel_time
+
+
+def add_zones_to_gdf(passengers_gdf):
+    # Iteriere über die Zeilen des DataFrames
+    for index, row in passengers_gdf.iterrows():
+        if row['start gemeinde'] == row['end gemeinde']:
+            passengers_gdf.at[index, 'zone'] = 1
+        elif (row['start gemeinde'] == 'Meilen' and row['end gemeinde'] == 'Uster') or \
+                (row['start gemeinde'] == 'Uster' and row['end gemeinde'] == 'Meilen'):
+            passengers_gdf.at[index, 'zone'] = 3
+        elif row['start gemeinde'] != row['end gemeinde']:
+            passengers_gdf.at[index, 'zone'] = 2
+    return passengers_gdf
+
+def calculate_income(passengers_gdf):
+    # Berechne den Gesamteinnahmen
+    income = 0
+    for index, row in passengers_gdf.iterrows():
+        if row['zone'] == 1:
+            passengers_gdf.at[index, 'income'] = 2.80 # CHF
+        elif row['zone'] == 2:
+            passengers_gdf.at[index, 'income'] = 4.60 # CHF
+        elif row['zone'] == 3:
+            passengers_gdf.at[index, 'income'] = 7.00 # CHF
+    return passengers_gdf
 
 
 def plot_passengers(passengers_gdf, bus_stops_gdf, demand_geojson, destination_geojson, gemeindegrenzen):
@@ -181,18 +220,24 @@ def plot_passengers(passengers_gdf, bus_stops_gdf, demand_geojson, destination_g
     ax.set_ylabel('Latitude')
 
     demand_legend = plt.Line2D([], [], color='green', marker='o', markersize=8, linestyle='None', label='Demand Points')
-    destination_legend = plt.Line2D([], [], color='blue', marker='o', markersize=8, linestyle='None', label='Destination Points')
-    passengers_demand_legend = plt.Line2D([], [], color='orange', marker='o', markersize=8, linestyle='None', label='Passengers origin')
-    passengers_destination_legend = plt.Line2D([], [], color='yellow', marker='o', markersize=8, linestyle='None', label='Passengers destination')
+    destination_legend = plt.Line2D([], [], color='blue', marker='o', markersize=8, linestyle='None',
+                                    label='Destination Points')
+    passengers_demand_legend = plt.Line2D([], [], color='orange', marker='o', markersize=8, linestyle='None',
+                                          label='Passengers origin')
+    passengers_destination_legend = plt.Line2D([], [], color='yellow', marker='o', markersize=8, linestyle='None',
+                                               label='Passengers destination')
 
-    ax.legend(handles=[demand_legend, destination_legend, passengers_demand_legend, passengers_destination_legend], loc='upper left')
+    ax.legend(handles=[demand_legend, destination_legend, passengers_demand_legend, passengers_destination_legend],
+              loc='upper left')
 
     plt.show()
+
 
 def count_passengers(passengers_gdf):
     num_passengers = passengers_gdf.shape[0]
     return num_passengers
     print("Anzahl der Passagiere im Bus:", num_passengers)
+
 
 # Funktion zum Plotten der Routen auf dem Straßennetzwerk
 def plot_routes(G, routes):

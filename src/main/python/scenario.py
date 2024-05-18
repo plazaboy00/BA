@@ -70,7 +70,7 @@ def scenario():
     daten_uetikon = filter_target_data(DATEN_FILTERED, 'Uetikon am See')
 
     # Annahme: Vordefinierte Werte für stunden_verkehrstag und prozent_verteilung_hoch/mittel/niedrig
-    stunden_verkehrstag = 120
+    stunden_verkehrstag = 60
     prozent_verteilung_hoch = 0.5
     prozent_verteilung_mittel = 0.3
     prozent_verteilung_niedrig = 0.2
@@ -227,7 +227,7 @@ def scenario():
     alle_punkte_df = pd.concat([egg_punkte_df, uster_punkte_df, meilen_punkte_df, uetikon_punkte_df], ignore_index=True)
     alle_punkte_df_with_passenger_numbers = add_passenger_numbers(alle_punkte_df)
 
-    alle_punkte_df_with_passenger_numbers.to_file(ROOT_FILES + ROOT_DOCS + "Nachfrage_neu.geojson", driver='GeoJSON')
+    alle_punkte_df_with_passenger_numbers.to_file(ROOT_FILES + ROOT_DOCS + "Nachfrage_bahnhof.geojson", driver='GeoJSON')
 
     # Plotten der Nachfrageverteilung
     #plot_demand_distribution(DATEN_GEMEINDENGRENZEN, gdf_zentrale_Dichte,
@@ -237,7 +237,7 @@ def scenario():
     new_destination_gdf = create_destination_zuglinie_gdf_neu(alle_punkte_df_with_passenger_numbers, gdf_zentrale_Dichte, gdf_hohe_Dichte,
                                                  gdf_tiefe_Dichte, ODPT_stops)
     # Speichern der GeoDataFrame als GeoJSON-Datei
-    new_destination_gdf.to_file(ROOT_FILES + ROOT_DOCS + "Ziele_neu.geojson", driver='GeoJSON')
+    new_destination_gdf.to_file(ROOT_FILES + ROOT_DOCS + "Ziele_bahnhof.geojson", driver='GeoJSON')
 
     # Anwenden der Funktion für das Hinzufügen von Zielspalten
     output_gdf = add_destination_columns(alle_punkte_df_with_passenger_numbers, gdf_zentrale_Dichte,

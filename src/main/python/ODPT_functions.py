@@ -307,6 +307,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
 
     # Iteriere über die Nachfrageknoten
     for demand_index, demand_row in demand_nodes.iterrows():
+        demand_gemeinde = demand_row['gemeinde']
         demand_node = demand_row['nearest_node']
         demand_start_stop, demand_end_stop = demand_row['section']
         demand_timestamp = demand_row['timestamp']
@@ -349,6 +350,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         section_tuple = corresponding_target_node['section'].values[0]
         target_start_stop, target_end_stop = section_tuple
         target_node = corresponding_target_node['nearest_node'].values[0]
+        target_gemeinde = corresponding_target_node['gemeinde'].values[0]
 
         # Überprüfe, ob der demand und der target Knoten dieselben sind
         if demand_node == target_node:
@@ -396,6 +398,8 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
             'origin': demand_node,
             'destination': target_node,
             'id:': demand_row['passagier_nummer'] - 1,
+            'start gemeinde': demand_gemeinde,
+            'end gemeinde': target_gemeinde,
             'timestamp': demand_timestamp
         })
     # Erstelle gdf aus den Passagier Daten
