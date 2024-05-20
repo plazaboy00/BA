@@ -89,6 +89,6 @@ def busline():
 
     return num_passengers, total_route_length, total_travel_time, passengers_gdf
 
-#busline_passengers, busline_km, busline_total_travel_time, passenger_gdf = busline()
+busline_passengers, busline_km, busline_total_travel_time, passenger_gdf = busline()
 #print(busline_km)
 #print(type(busline_km))

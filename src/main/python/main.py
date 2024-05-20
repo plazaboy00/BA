@@ -3,6 +3,9 @@ from main_functions import *
 import pandas as pd
 import importlib
 
+ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
+ROOT_DOCS = 'src/main/resources/Dokumente/'
+
 def run_simulation(num_simulations):
     scenario_module = importlib.import_module('scenario')
     bus_model = importlib.import_module('busline')
@@ -34,6 +37,11 @@ def run_simulation(num_simulations):
 if __name__ == "__main__":
     num_simulations = int(input("Wie oft möchten Sie das Szenario ausführen? "))
     combined_results, costs, value = run_simulation(num_simulations)
+    # Pfad zur Ausgabedatei
+    csv_path_rohdaten = ROOT_FILES + ROOT_DOCS + "Rohdaten.csv"
+    combined_results.to_csv(csv_path_rohdaten, index=False)
+    csv_path_costs = ROOT_FILES + ROOT_DOCS + "Kosten&Einnahmen.csv"
+    costs.to_csv(csv_path_costs, index=False)
     print(combined_results)
     print(costs)
     print(value)

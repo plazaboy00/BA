@@ -42,7 +42,7 @@ def results():
 def costs(df):
     def costs_per_a_km(km):
         CHF_per_100_Fzkm = 69.07
-        h_per_day = 12
+        h_per_day = 18
         days_per_year = 365
         mean_km = np.mean(km)
         km_per_a = mean_km * h_per_day * days_per_year
@@ -52,7 +52,7 @@ def costs(df):
         return costs
 
     def total_income(mean_income_per_h):
-        h_per_day = 12
+        h_per_day = 18
         days_per_year = 365
         income_per_a = mean_income_per_h * h_per_day * days_per_year
         return income_per_a

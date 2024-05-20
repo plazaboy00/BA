@@ -120,12 +120,12 @@ def odpt():
     print('Gesamtreisezeit in Minuten:', total_travel_time)
 
     max_passengers = passenger_in_vehicle(sorted_section_trip_points, demand_gdf, target_gdf)
-    print('Höchste Anzahl an Passagieren:', max_passengers)
+    #print('Höchste Anzahl an Passagieren:', max_passengers)
 
     total_distance = travel_distance1 + travel_distance2 + travel_distance3 + travel_distance4
     print('Zurückgelegte Distanz:', total_distance, 'km')
 
-    return max_passengers, total_distance, total_travel_time, passengers_gdf
+    return successful_trips, total_distance, total_travel_time, passengers_gdf
 
 
-#odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt()
+odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt()

@@ -99,10 +99,15 @@ def compute_travel_time(passengers_gdf):
 
 def passengers_on_bus(bus_stops_gdf, demand_geojson, destination_geojson):
     passengers = []
+    passenger_number = 0
+    max_capacity = 86
     bus_stop_coords = [(point.x, point.y) for point in bus_stops_gdf.geometry]
     bus_stop_times = list(bus_stops_gdf['ankunftszeit'])
 
     for demand_feature, dest_feature in zip(demand_geojson['features'], destination_geojson['features']):
+        if passenger_number == max_capacity:
+            print('Fahrzeug ist voll')
+            break
         passenger_origin = Point(demand_feature['geometry']['coordinates'])
         start_gemeinde = demand_feature['properties']['gemeinde']
         passenger_destination = Point(dest_feature['geometry']['coordinates'])
@@ -133,6 +138,7 @@ def passengers_on_bus(bus_stops_gdf, demand_geojson, destination_geojson):
 
             # Überprüfen, ob die Start- und Endpunkte unterschiedliche Bushaltestellen sind und die Startzeit vor der Endzeit liegt
             if origin_in_buffer and destination_in_buffer and start != end and start_time < end_time:
+                passenger_number += 1
                 passengers.append({
                     'origin': passenger_origin,
                     'start gemeinde': start_gemeinde,

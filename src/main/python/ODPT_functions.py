@@ -301,12 +301,18 @@ def validate_nodes_in_data(nodes, main_stop_nodes, passengers_gdf):
 
 def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_travel_time_per_section, start_timestamp, G):
     successful_trips = 0
+    max_capacity = 86
     passengers = []
     section_trip_points = create_section_trip_points(main_stop_nodes)
     bus_timestamp = start_timestamp
 
     # Iteriere über die Nachfrageknoten
     for demand_index, demand_row in demand_nodes.iterrows():
+
+        if successful_trips == max_capacity:
+            print('Fahrzeug ist voll')
+            break
+
         demand_gemeinde = demand_row['gemeinde']
         demand_node = demand_row['nearest_node']
         demand_start_stop, demand_end_stop = demand_row['section']

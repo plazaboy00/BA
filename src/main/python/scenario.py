@@ -70,7 +70,7 @@ def scenario():
     daten_uetikon = filter_target_data(DATEN_FILTERED, 'Uetikon am See')
 
     # Annahme: Vordefinierte Werte für stunden_verkehrstag und prozent_verteilung_hoch/mittel/niedrig
-    stunden_verkehrstag = 60
+    stunden_verkehrstag = 18
     prozent_verteilung_hoch = 0.5
     prozent_verteilung_mittel = 0.3
     prozent_verteilung_niedrig = 0.2
@@ -253,5 +253,5 @@ def scenario():
     # DATEN_STRASSENNETZ, destination_gdf)
 
 
-#scenario()
+scenario()
 
