@@ -1,38 +1,46 @@
 import osmnx as ox
 from bus_functions import load_street_network, save_street_network
 import json
+import os
 
 
 def load_roadmap():
-    ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
-    # Pfad zur Shapefile-Datei mit den Strassen
-    ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
+    # Definiere den Pfad zum Speichern der GeoJSON-Daten
+    ROOT_FILES = "C:/Users/Linus/PycharmProjects/BA/"  # Passe dies an deinen Basis-Pfad an
+    ROOT_RESOURCE_STRASSENNETZ = "src/main/resources/strassennetz/"
+    # file_path = os.path.join(ROOT_FILES, ROOT_RESOURCE_STRASSENNETZ, "strassenetzwerk.geojson")
 
-    # Definieren des Bereichs für das Straßennetzwerk
-    north, south, east, west = 47.3667, 47.2586, 8.754, 8.6103
+    # Definiere die Grenzen für das herunterzuladende Straßennetzwerk
+    north, south, east, west = 47.3876, 47.2521, 8.754, 8.6003
 
-    # Laden des Straßennetzwerks
-    graph = load_street_network(north, south, east, west)
+    # Lade das Straßennetzwerk basierend auf dem Rechteck herunter
+    G = ox.graph.graph_from_bbox(north, south, east, west, network_type='drive')
 
-    # Konvertieren des Graphen in ein GeoJSON-FeatureCollection
-    features = ox.graph_to_gdfs(graph, nodes=False, edges=True)
-    geojson_data = features.to_json()
+    # Konvertiere den Graphen in ein GeoJSON-FeatureCollection
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(G)
+    features = gdf_edges
 
-    # Bestimmen des relativen Pfads
-    file_path = ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + "strassenetzwerk.geojson"
 
-    # Schreiben den GeoJSON-Daten in die Datei
-    with open(file_path, "w") as f:
-        json.dump(geojson_data, f)
+    # Erstelle das Verzeichnis, falls es nicht existiert
+    # os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
-    # impute edge (driving) speeds and calculate edge travel times
-    graph = ox.speed.add_edge_speeds(graph)
-    graph = ox.speed.add_edge_travel_times(graph)
+    # Speichere die GeoJSON-Daten in eine Datei
+    # features.to_file(file_path, driver='GeoJSON')
 
-    # you can convert MultiDiGraph to/from GeoPandas GeoDataFrames
-    gdf_nodes, gdf_edges = ox.utils_graph.graph_to_gdfs(graph)
-    graph = ox.utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=graph.graph)
-    # Speichern des Straßennetzwerks als GeoPackage
-    save_street_network(graph, ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + "OSMStrassennetz.gpkg")
+    # Impute edge (driving) speeds and calculate edge travel times
+    G = ox.speed.add_edge_speeds(G)
+    G = ox.speed.add_edge_travel_times(G)
 
-    return graph
+    # Konvertiere den Graphen in GeoDataFrames
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(G)
+
+    # Erstelle den Graphen erneut aus den GeoDataFrames
+    G = ox.graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=G.graph)
+
+    # Speichere den Graphen in eine GraphML-Datei für zukünftige Nutzung
+    graphml_file_path = os.path.join(ROOT_FILES, ROOT_RESOURCE_STRASSENNETZ, "strassenetzwerk.graphml")
+    ox.save_graphml(G, graphml_file_path)
+
+    # Zum Laden des Graphen in Zukunft:
+    G = ox.load_graphml(graphml_file_path)
+    return G

@@ -2,7 +2,7 @@ from geo_data_processing import *
 from plot import *
 
 
-def scenario():
+def scenario(stunden_verkehrstag):
     # Erstelle Root zum Hauptordner
     ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
     ROOT_RESOURCE = 'src/main/resources/QGIS/Nutzungsplan/'
@@ -37,15 +37,15 @@ def scenario():
     ODPT_stops = gpd.read_file(shapefile_path)
 
     # Erstellen der Nachfragepunkte zu den Bahnhöfen
-    gemeinden_zuglinie_Meilen = ['Meilen', 'Zürich', 'Zollikon', 'Küsnacht (ZH)', 'Erlenbach (ZH)', 'Herrliberg',
+    gemeinden_zuglinie_Meilen = ['Meilen', 'Zollikon', 'Küsnacht (ZH)', 'Erlenbach (ZH)', 'Herrliberg',
                                  'Uetikon am See', 'Männedorf', 'Stäfa', 'Hombrechtikon']
-    zielgemeinden_zuglinie_meilen = ['Meilen', 'Zürich', 'Zollikon', 'Küsnacht (ZH)', 'Erlenbach (ZH)', 'Herrliberg',
+    zielgemeinden_zuglinie_meilen = ['Meilen',  'Zollikon', 'Küsnacht (ZH)', 'Erlenbach (ZH)', 'Herrliberg',
                                      'Uetikon am See', 'Männedorf', 'Stäfa', 'Hombrechtikon']
-    gemeinden_zuglinie_egg = ['Egg', 'Zürich', 'Zollikon', 'Küsnacht (ZH)', 'Maur', 'Zumikon']
-    zielgemeinden_zuglinie_egg = ['Egg', 'Zürich', 'Zollikon', 'Küsnacht (ZH)', 'Maur', 'Zumikon']
-    gemeinden_zuglinie_uster = ['Uster', 'Zürich', 'Dübendorf', 'Greifensee', 'Schwerzenbach', 'Seegräben', 'Wetzikon',
+    gemeinden_zuglinie_egg = ['Egg',  'Zollikon', 'Küsnacht (ZH)', 'Maur', 'Zumikon']
+    zielgemeinden_zuglinie_egg = ['Egg',  'Zollikon', 'Küsnacht (ZH)', 'Maur', 'Zumikon']
+    gemeinden_zuglinie_uster = ['Uster', 'Dübendorf', 'Greifensee', 'Schwerzenbach', 'Seegräben', 'Wetzikon',
                                 'Bubikon', 'Rüti (ZH)']
-    zielgemeinden_zuglinie_uster = ['Uster', 'Zürich', 'Dübendorf', 'Greifensee', 'Schwerzenbach', 'Seegräben',
+    zielgemeinden_zuglinie_uster = ['Uster', 'Dübendorf', 'Greifensee', 'Schwerzenbach', 'Seegräben',
                                     'Wetzikon', 'Bubikon', 'Rüti (ZH)']
     gewuenschte_kategorien_zuglinie = ['Verkehrsaufkommen']
     gewuenschte_verkehrsmittel_zuglinie = ['oev']
@@ -70,7 +70,7 @@ def scenario():
     daten_uetikon = filter_target_data(DATEN_FILTERED, 'Uetikon am See')
 
     # Annahme: Vordefinierte Werte für stunden_verkehrstag und prozent_verteilung_hoch/mittel/niedrig
-    stunden_verkehrstag = 18
+    #stunden_verkehrstag = 18
     prozent_verteilung_hoch = 0.5
     prozent_verteilung_mittel = 0.3
     prozent_verteilung_niedrig = 0.2
@@ -252,6 +252,6 @@ def scenario():
     # gdf_hohe_Dichte, gdf_tiefe_Dichte,
     # DATEN_STRASSENNETZ, destination_gdf)
 
-
-scenario()
+stunden_verkehrstag = 18
+scenario(stunden_verkehrstag)
 

@@ -538,7 +538,7 @@ def create_destination_zuglinie_gdf_neu(input_gdf, gemeinden_zentral_gdfs, gemei
 
             # Füge den Zielpunkt als neue Zeile zum DataFrame hinzu
             new_rows.append({'geometry': ziel_punkt,
-                             'gemeinde': ziel_gemeinde if row['geometry'] not in bahnhof_kontingent_dict else gemeinde,
+                             'gemeinde': ziel_gemeinde,#if row['geometry'] not in bahnhof_kontingent_dict else gemeinde,
                              'passagier_nummer': passagier_nummer})
 
     # Konvertiere die neuen Zeilen in ein DataFrame

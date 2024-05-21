@@ -42,7 +42,7 @@ def get_nearest_node(G, point):
 
 
 # Funktion zum Berechnen des kürzesten Pfads zwischen den Haltestellen
-def compute_shortest_paths(G, points_gdf, start_time):
+def compute_shortest_paths(G, points_gdf, start_time, waiting_time):
     routes = []
     route_lengths = []
     ankunftszeiten = []
@@ -50,7 +50,7 @@ def compute_shortest_paths(G, points_gdf, start_time):
     # Startzeit als datetime-Objekt parsen
     aktuelle_zeit = start_time
     ankunftszeiten.append(aktuelle_zeit)
-    v = 12  # Geschwindigkeit in m/s
+    v = 14  # Geschwindigkeit in m/s
 
     for idx, row in points_gdf.iterrows():
         orig = get_nearest_node(G, row['geometry'])
@@ -66,7 +66,7 @@ def compute_shortest_paths(G, points_gdf, start_time):
 
         # Berechne die Reisezeit in Sekunden
         route_travel_time = route_length / v
-        aktuelle_zeit += timedelta(seconds=route_travel_time)
+        aktuelle_zeit += timedelta(seconds=route_travel_time) + timedelta(seconds=waiting_time)
         ankunftszeiten.append(aktuelle_zeit)
 
         # Füge eine 10-minütige Pause in der Hälfte der Stopps ein
@@ -97,10 +97,10 @@ def compute_travel_time(passengers_gdf):
     return passengers_gdf
 
 
-def passengers_on_bus(bus_stops_gdf, demand_geojson, destination_geojson):
+def passengers_on_bus(bus_stops_gdf, demand_geojson, destination_geojson, max_capacity):
     passengers = []
     passenger_number = 0
-    max_capacity = 86
+    max_capacity = 31
     bus_stop_coords = [(point.x, point.y) for point in bus_stops_gdf.geometry]
     bus_stop_times = list(bus_stops_gdf['ankunftszeit'])
 

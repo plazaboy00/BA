@@ -2,40 +2,18 @@ from ODPT_functions import *
 from plot import *
 from bus_functions import add_zones_to_gdf, calculate_income
 from roadmap import load_roadmap
+import os
 
 
-def odpt():
+def odpt(max_capacity, max_travel_time_per_section):
     ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
     ROOT_Busstations = 'src/main/resources/Buslinie/Busstationen/'
     ROOT_odpt_stops = 'src/main/resources/ODPT/'
     ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
+    ROOT_RESOURCE_STRASSENNETZGRAPH = 'src/main/resources/strassennetz/'
+    strassennetz_path = os.path.join(ROOT_FILES, ROOT_RESOURCE_STRASSENNETZGRAPH, "strassenetzwerk.graphml")
 
-    # Strassennetzwerk aus Roadmap laden
-    # G = load_roadmap()
-    north, south, east, west = 47.3876, 47.2521, 8.754, 8.6003
-
-    # Herunterladen des Straßennetzwerks basierend auf dem Rechteck
-    G = ox.graph.graph_from_bbox(north, south, east, west, network_type='drive')
-
-    # Konvertieren des Graphen in ein GeoJSON-FeatureCollection
-    features = ox.graph_to_gdfs(G, nodes=False, edges=True)
-    geojson_data = features.to_json()
-
-    # Bestimmen des relativen Pfads
-    file_path = ROOT_FILES + ROOT_RESOURCE_STRASSENNETZ + "strassenetzwerk.geojson"
-
-    # Schreiben den GeoJSON-Daten in die Datei
-    with open(file_path, "w") as f:
-        json.dump(geojson_data, f)
-
-    # impute edge (driving) speeds and calculate edge travel times
-    G = ox.speed.add_edge_speeds(G)
-    G = ox.speed.add_edge_travel_times(G)
-
-    # you can convert MultiDiGraph to/from GeoPandas GeoDataFrames
-    # print(type(G))
-    gdf_nodes, gdf_edges = ox.utils_graph.graph_to_gdfs(G)
-    G = ox.utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=G.graph)
+    G = ox.load_graphml(strassennetz_path)
 
     # Pfad zur Shapefile-Datei mit den Bushaltestellen
     shapefile_path = ROOT_FILES + ROOT_odpt_stops + "ODPTSTOPS.shp"
@@ -69,25 +47,30 @@ def odpt():
     demand_gdf_wgs84['geometry'] = demand_gdf_wgs84['geometry'].apply(lv95_to_wgs84)
     target_gdf_wgs84['geometry'] = target_gdf_wgs84['geometry'].apply(lv95_to_wgs84)
 
+    print('Time 1')
     # Funktion preprocess_gdfs
     demand_gdf, target_gdf, main_stops_gdf, odpt_stops_wgs84_gdf = \
         preprocess_gdfs(demand_gdf_wgs84, target_gdf_wgs84,
                         odpt_stops_with_return_wgs84, odpt_stops_wgs84, G)
-
+    print('Time 2')
     # Sortiere, die Nachfrage punkte nach ihrer Effizienz / Entfernung
     sorted_demand_gdf, sorted_target_gdf = sort_demand_target_nodes \
         (G, demand_gdf, target_gdf, main_stops_gdf)
 
+    print('Time 3')
     # Füge die section zu den Nachfrage- und Ziel Punkten dazu
     demand_gdf, target_gdf = add_section_to_points(G, sorted_demand_gdf, sorted_target_gdf, odpt_stops_wgs84)
+
+    print('Time 4')
     # Sortiere die Target-Nodes in die section nach dem Demand-Node
     demand_gdf, target_gdf = sort_target_section(demand_gdf, target_gdf)
 
+    print('Time 5')
     # Annahme setze die maximale Reisezeit pro Abschnitt auf 15 Minuten
-    max_travel_time_per_section = 900  # 15 Minuten
+    #max_travel_time_per_section = 900  # 15 Minuten
     start_timestamp = pd.Timestamp('2018-04-20 09:05:00')
     sorted_section_trip_points, successful_trips, passengers_gdf = process_demand_points\
-        (demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, start_timestamp, G)
+        (demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, start_timestamp, max_capacity, G)
     print(sorted_section_trip_points)
     print('Erfolgreiche Trips:', successful_trips)
 
@@ -119,7 +102,7 @@ def odpt():
     total_travel_time = (travel_time1 + travel_time2 + travel_time3 + travel_time4) / 60
     print('Gesamtreisezeit in Minuten:', total_travel_time)
 
-    max_passengers = passenger_in_vehicle(sorted_section_trip_points, demand_gdf, target_gdf)
+    #max_passengers = passenger_in_vehicle(sorted_section_trip_points, demand_gdf, target_gdf)
     #print('Höchste Anzahl an Passagieren:', max_passengers)
 
     total_distance = travel_distance1 + travel_distance2 + travel_distance3 + travel_distance4
@@ -127,5 +110,5 @@ def odpt():
 
     return successful_trips, total_distance, total_travel_time, passengers_gdf
 
-
-odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt()
+max_capacity_odpt, max_travel_time_per_section = 10, 900
+odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt(max_capacity_odpt, max_travel_time_per_section)

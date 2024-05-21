@@ -1,34 +1,21 @@
 from bus_functions import *
 from plot import *
+import os
 from roadmap import load_roadmap
 #from scenario import start_timestamp, end_timestamp
 
-def busline():
+def busline(max_capacity, waiting_time):
     ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
     ROOT_DOCS = 'src/main/resources/Dokumente/'
     ROOT_Busstations = 'src/main/resources/Buslinie/Busstationen/'
+    ROOT_RESOURCE_STRASSENNETZGRAPH = 'src/main/resources/strassennetz/'
+    strassennetz_path = os.path.join(ROOT_FILES, ROOT_RESOURCE_STRASSENNETZGRAPH, "strassenetzwerk.graphml")
 
+    G = ox.load_graphml(strassennetz_path)
     # Lade und die Gemeindegrenzen
-    shp_file = ROOT_FILES + 'src/main/resources/QGIS/Gemeindegrenzen/Grenzen_komp.shp'
-    gemeindegrenzen = gpd.read_file(shp_file)
 
     # Pfad zur Shapefile-Datei mit den Strassen
     ROOT_RESOURCE_STRASSENNETZ = 'src/main/resources/QGIS/Strassen/'
-
-    # Definieren des Bereichs für das Straßennetzwerk
-    north, south, east, west = 47.3667, 47.2586, 8.754, 8.6103
-
-    # Laden des Straßennetzwerks
-    G = load_street_network(north, south, east, west)
-
-    # Füge Geschwindigkeit zu den Kanten des Graphen hinzu (benötigt für die travel_time-Berechnung)
-    # G = ox.add_edge_speeds(G)
-
-    # Berechne die Reisezeit (travel_time) in Sekunden basierend auf der Geschwindigkeit
-    # G = ox.add_edge_travel_times(G)
-
-    # Berechne die Reisezeit (travel_time) in Sekunden basierend auf der Geschwindigkeit
-    # G = ox.add_edge_travel_times(ox.add_edge_speeds(G))
 
     # Laden der Bushaltestellen
     bus_stops = gpd.read_file(ROOT_FILES + ROOT_Busstations + "Bushalte.shp")
@@ -44,7 +31,7 @@ def busline():
     bus_stops_with_return_wgs84['geometry'] = bus_stops_with_return_wgs84['geometry'].apply(lv95_to_wgs84)
 
     # Berechnung der kürzesten Routen zwischen den Haltestellen
-    routes, route_lengths, busstops_with_time = compute_shortest_paths(G, bus_stops_with_return_wgs84, start_timestamp)
+    routes, route_lengths, busstops_with_time = compute_shortest_paths(G, bus_stops_with_return_wgs84, start_timestamp, waiting_time)
 
     # print(busstops_with_time)
 
@@ -60,7 +47,7 @@ def busline():
     destination_geojson = load_geojson(file_path_destination)
 
     # Bestimme die Passagiere im Bus
-    passengers_gdf = passengers_on_bus(bus_stops_with_return, demand_geojson, destination_geojson)
+    passengers_gdf = passengers_on_bus(bus_stops_with_return, demand_geojson, destination_geojson, max_capacity)
     # print(passengers_gdf)
 
     # Berechne die Reisezeit der Passagiere
@@ -89,6 +76,8 @@ def busline():
 
     return num_passengers, total_route_length, total_travel_time, passengers_gdf
 
-busline_passengers, busline_km, busline_total_travel_time, passenger_gdf = busline()
+waiting_time = 20
+max_capacity_bus = 31
+busline_passengers, busline_km, busline_total_travel_time, passenger_gdf = busline(max_capacity_bus, waiting_time)
 #print(busline_km)
 #print(type(busline_km))

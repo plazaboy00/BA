@@ -1,0 +1,4 @@
+<!DOCTYPE connections>
+<qgsWFSConnections version="1.1">
+    <wfs invertAxisOrientation="0" password="" name="Kanton Zürich Strassennetz" pagingenabled="default" url="https://maps.zh.ch/wfs/TBAStrZHWFS" pagesize="" username="" version="auto" ignoreAxisOrientation="0" maxnumfeatures=""/>
+</qgsWFSConnections>

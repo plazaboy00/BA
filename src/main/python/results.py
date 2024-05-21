@@ -4,17 +4,17 @@ from busline import busline
 from ODPT_model import odpt
 
 
-def results():
+def results(max_capacity_bus, waiting_time, max_capacity_odpt, max_travel_time_per_section):
     # Erstelle Tabelle mit den Rohdaten
 
     # Provisorische Werte
     #bus_time = 55
 
-    busline_passengers, busline_km, busline_total_travel_time, bus_passengers_df = busline()
+    busline_passengers, busline_km, busline_total_travel_time, bus_passengers_df = busline(max_capacity_bus, waiting_time)
     #print(busline_passengers, busline_km, busline_total_travel_time)
     income_bus_per_h = bus_passengers_df['income'].sum()
 
-    ODPT_passengers, ODPT_km, ODPT_total_travel_time, ODPT_passengers_df = odpt()
+    ODPT_passengers, ODPT_km, ODPT_total_travel_time, ODPT_passengers_df = odpt(max_capacity_odpt, max_travel_time_per_section)
     #print(ODPT_passengers, ODPT_km, ODPT_total_travel_time)
     income_ODPT_per_h = ODPT_passengers_df['income'].sum()
 
