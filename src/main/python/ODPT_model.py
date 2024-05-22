@@ -3,9 +3,10 @@ from plot import *
 from bus_functions import add_zones_to_gdf, calculate_income
 from roadmap import load_roadmap
 import os
+import numpy as np
 
 
-def odpt(max_capacity, max_travel_time_per_section):
+def odpt(max_capacity, max_travel_time_per_section, repetitions):
     ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
     ROOT_Busstations = 'src/main/resources/Buslinie/Busstationen/'
     ROOT_odpt_stops = 'src/main/resources/ODPT/'
@@ -66,49 +67,43 @@ def odpt(max_capacity, max_travel_time_per_section):
     demand_gdf, target_gdf = sort_target_section(demand_gdf, target_gdf)
 
     print('Time 5')
-    # Annahme setze die maximale Reisezeit pro Abschnitt auf 15 Minuten
-    #max_travel_time_per_section = 900  # 15 Minuten
+
+    # Wiederhole den Prozess mehrmals
+    #max_travel_time_per_section = 900  # 15 min in Sekunden
     start_timestamp = pd.Timestamp('2018-04-20 09:05:00')
-    sorted_section_trip_points, successful_trips, passengers_gdf = process_demand_points\
-        (demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, start_timestamp, max_capacity, G)
-    print(sorted_section_trip_points)
-    print('Erfolgreiche Trips:', successful_trips)
+    all_section_trip_points, all_successful_trips, all_passengers_gdfs = process_demand_points_repeatedly(
+        demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, start_timestamp, max_capacity, G,
+        repetitions)
 
-    # Berechne die travel time der Passagiere, deren Zonen und die Einnahmen
-    passengers_gdf = calculate_passenger_travel_time(sorted_section_trip_points, G, passengers_gdf)
-    passengers_gdf = add_zones_to_gdf(passengers_gdf)
-    passengers_gdf = calculate_income(passengers_gdf)
-    print(passengers_gdf)
+    def updated_all_passenger_gdf(all_passengers_gdfs, all_section_trip_points, G):
+        updated_passengers_gdfs = []
+        for passengers_gdf, sorted_section_trip_points in zip(all_passengers_gdfs, all_section_trip_points):
+            passengers_gdf = calculate_passenger_travel_time(sorted_section_trip_points, G, passengers_gdf)
+            passengers_gdf = add_zones_to_gdf(passengers_gdf)
+            passengers_gdf = calculate_income(passengers_gdf)
+            updated_passengers_gdfs.append(passengers_gdf)
+        return updated_passengers_gdfs
 
-    # Unterteile die Nodes in die Sektoren
-    section1, section2, section3, section4 = split_sections(sorted_section_trip_points)
-    route1 = route_node(G, [section1])
-    route2 = route_node(G, [section2])
-    route3 = route_node(G, [section3])
-    route4 = route_node(G, [section4])
 
-    # Reisezeit der Sektoren & gesamt Reisezeit
-    travel_time1 = calculate_section_travel_time(route1, G)
-    travel_time2 = calculate_section_travel_time(route2, G)
-    travel_time3 = calculate_section_travel_time(route3, G)
-    travel_time4 = calculate_section_travel_time(route4, G)
+    updated_all_passenger_gdf = updated_all_passenger_gdf(all_passengers_gdfs, all_section_trip_points, G)
+    print(updated_all_passenger_gdf)
 
-    # Strecke des odpt Fahrzeuges
-    travel_distance1 = calculate_route_travel_distance(route1, G)
-    travel_distance2 = calculate_route_travel_distance(route2, G)
-    travel_distance3 = calculate_route_travel_distance(route3, G)
-    travel_distance4 = calculate_route_travel_distance(route4, G)
+    all_routes, all_total_travel_time, all_total_distance = create_sections_routes_all_passengers(
+        all_section_trip_points, G)
+    print(all_total_travel_time)
+    print(all_total_distance)
 
-    total_travel_time = (travel_time1 + travel_time2 + travel_time3 + travel_time4) / 60
-    print('Gesamtreisezeit in Minuten:', total_travel_time)
 
-    #max_passengers = passenger_in_vehicle(sorted_section_trip_points, demand_gdf, target_gdf)
-    #print('Höchste Anzahl an Passagieren:', max_passengers)
+    mean_travel_time = np.mean(all_total_travel_time)
+    mean_distance = np.mean(all_total_distance)
+    mean_successful_trips = np.mean(all_successful_trips)
+    print('Durchschnittliche Reisezeit:', mean_travel_time, 'min')
+    print('Durchschnittliche Distanz:', mean_distance, 'km')
+    print('Durchschnittliche erfolgreiche Trips:', mean_successful_trips)
 
-    total_distance = travel_distance1 + travel_distance2 + travel_distance3 + travel_distance4
-    print('Zurückgelegte Distanz:', total_distance, 'km')
+    return mean_successful_trips, mean_distance, mean_travel_time, updated_all_passenger_gdf
 
-    return successful_trips, total_distance, total_travel_time, passengers_gdf
 
-max_capacity_odpt, max_travel_time_per_section = 10, 900
-odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt(max_capacity_odpt, max_travel_time_per_section)
+
+max_capacity_odpt, max_travel_time_per_section, repetitions = 5, 900, 2
+odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt(max_capacity_odpt, max_travel_time_per_section, repetitions)

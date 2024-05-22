@@ -324,7 +324,7 @@ def calculate_current_passengers(section_trip_points):
     # Überprüfe, ob mit dem neuen demand_node die Anzahl der Passagiere im Fahrzeug überschritten wird
     current_passengers = 0
     max_passengers = 0
-    print(section_trip_points)
+    #print(section_trip_points)
     for sublist in section_trip_points:
         for node, action in sublist:
             if action == 0:
@@ -368,7 +368,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
     passengers = []
 
     section_trip_points = create_section_trip_points(main_stop_nodes)
-    print('section_trip_points erstellt', section_trip_points)
+    #print('section_trip_points erstellt', section_trip_points)
     number_of_sublists = len(section_trip_points)
     sublists_flags = [False] * number_of_sublists
     bus_timestamp = start_timestamp
@@ -381,7 +381,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         demand_timestamp = demand_row['timestamp']
 
         # print(demand_timestamp)
-        print('demand node', demand_node)
+        #print('demand node', demand_node)
 
         # Suche den Start-Hauptknoten des Demand-Knotens
         demand_start_stop_row = main_stop_nodes.loc[main_stop_nodes.index == demand_start_stop]
@@ -393,7 +393,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
 
         # Überprüfe, ob die Section des demand_nodes voll ist
         if sublists_flags[determine_flag_of_section(section_trip_points, nearest_node_demand_start, nearest_node_demand_end)] == True:
-            print('Section ist voll')
+            #print('Section ist voll')
             continue
 
         # Füge demand_node zu den Abschnitts-Trip-Punkten hinzu
@@ -409,8 +409,8 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         if travel_time > max_travel_time_per_section:
             section_trip_points = remove_demand_node_from_sublist(nearest_node_demand_start, nearest_node_demand_end,
                                                                   (demand_node, 0), section_trip_points)
-            print('remove')
-            print('section_trip_points 1', section_trip_points)
+            #print('remove')
+            #print('section_trip_points 1', section_trip_points)
             continue
 
         # Überprüfe, ob der demand_node in der vorgegebenen Zeit abgeholt werden kann
@@ -420,8 +420,8 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         if demand_timestamp < start_buffer or demand_timestamp > end_buffer:
             section_trip_points = remove_demand_node_from_sublist(nearest_node_demand_start, nearest_node_demand_end,
                                                                   (demand_node, 0), section_trip_points)
-            print('remove')
-            print('section_trip_points 2', section_trip_points)
+            #print('remove')
+            #print('section_trip_points 2', section_trip_points)
             continue
 
         # Überprüfe, ob das Fahrzeug voll ist
@@ -429,14 +429,14 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         #print('max_passengers', max_passengers)
         #print('section_trip_points 1', section_trip_points)
         if max_passengers > max_capacity:
-            print('Fahrzeug ist voll')
+            #print('Fahrzeug ist voll')
             section_trip_points = remove_demand_node_from_sublist(nearest_node_demand_start, nearest_node_demand_end,
                                                                   (demand_node, 0), section_trip_points)
 
             sublists_flags[determine_flag_of_section(section_trip_points, nearest_node_demand_start,
                                                      nearest_node_demand_end)] = True
-            print('remove')
-            print('section_trip_points 3', section_trip_points)
+            #print('remove')
+            #print('section_trip_points 3', section_trip_points)
             continue
 
         # Finde die zugehörigen Zielknoten für diesen Demand-Knoten
@@ -446,15 +446,15 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         target_node = corresponding_target_node['nearest_node'].values[0]
         target_gemeinde = corresponding_target_node['gemeinde'].values[0]
 
-        print('target_node', target_node)
+        #print('target_node', target_node)
 
         # Überprüfe, ob der demand und der target Knoten dieselben sind
         if demand_node == target_node:
-            print('Der Demand- und Zielknoten sind identisch')
+            #print('Der Demand- und Zielknoten sind identisch')
             section_trip_points = remove_demand_node_from_sublist(nearest_node_demand_start, nearest_node_demand_end,
                                                                   (demand_node, 0), section_trip_points)
-            print('remove')
-            print('section_trip_points 4', section_trip_points)
+            #print('remove')
+            #print('section_trip_points 4', section_trip_points)
             continue
 
         # Suche den Start-Hauptknoten des Ziel-Knotens
@@ -467,9 +467,9 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
 
         section_trip_points = add_targetnode_to_section(nearest_node_target_start, nearest_node_target_end, target_node,
                                                         section_trip_points)
-        print('bevor', section_trip_points)
+        #print('bevor', section_trip_points)
         section_trip_points = sort_sublists_by_shortest_path_with_target(section_trip_points, G, demand_node, target_node)
-        print('danach', section_trip_points)
+        #print('danach', section_trip_points)
 
         # Überprüfe, ob der target_node in der gleichen section ist wie der demand_node
         if nearest_node_demand_start == nearest_node_target_start and nearest_node_target_end == nearest_node_demand_end:
@@ -482,8 +482,8 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
                 section_trip_points = remove_demand_node_from_sublist(nearest_node_target_start,
                                                                       nearest_node_target_end, (target_node, 0),
                                                                       section_trip_points)
-                print('remove')
-                print('section_trip_points 5', section_trip_points)
+                #print('remove')
+                #print('section_trip_points 5', section_trip_points)
                 continue
 
         # Überprüfe, ob die Reisezeit pro Abschnitt die maximale Reisezeit pro Abschnitt überschreitet
@@ -493,16 +493,16 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
                                                                   (demand_node, 0), section_trip_points)
             section_trip_points = remove_demand_node_from_sublist(nearest_node_target_start, nearest_node_target_end,
                                                                   (target_node, 0), section_trip_points)
-            print('remove')
-            print('section_trip_points 6', section_trip_points)
+            #print('remove')
+            #print('section_trip_points 6', section_trip_points)
             continue
 
         # Setze die Flag zurück
         sublists_flags[determine_flag_of_section(
             section_trip_points, nearest_node_target_start, nearest_node_target_end)] = False
-        print('demand', demand_node)
-        print('target', target_node)
-        print('section_trip_points final', section_trip_points)
+        #print('demand', demand_node)
+        #print('target', target_node)
+        #print('section_trip_points final', section_trip_points)
 
         # Die Route zwischen Hauptknoten liegt innerhalb der Zeitbeschränkung
         successful_trips += 1
@@ -515,9 +515,9 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
             'timestamp': demand_timestamp
         })
     # Erstelle gdf aus den Passagier Daten
-    print(successful_trips)
+    #print(successful_trips)
     passengers_gdf = gpd.GeoDataFrame(passengers)
-    print('passenger', passengers_gdf)
+    #print('passenger', passengers_gdf)
 
     # Überprüfe die Validität der Knoten in den Abschnitten
     section_trip_points = validate_nodes_in_data(section_trip_points, main_stop_nodes, passengers_gdf)
@@ -549,11 +549,11 @@ def calculate_passenger_travel_time(sorted_section_trip_points, graph, passenger
 
         # Sicherstellen, dass die Route sowohl den Ursprung als auch das Ziel enthält
         if not route or route[0] != origin or route[-1] != destination:
-            #print(origin)
-            #print(destination)
-            #print(node)
-            #print(route)
-            #print(flattened_route)
+            print(origin)
+            print(destination)
+            print(node)
+            print(route)
+            print(flattened_route)
             raise ValueError("Ungültige Route: Zielpunkt kommt vor dem Ursprungspunkt oder Route ist ungültig.")
 
         # Berechne die Reisezeit entlang der Route
@@ -639,3 +639,81 @@ def calculate_route_travel_distance(route, graph):
             total_travel_distance += travel_distance
 
     return total_travel_distance / 1000  # Umrechnung von Metern in Kilometer
+
+
+def process_demand_points_repeatedly(demand_nodes, target_nodes, main_stop_nodes, max_travel_time_per_section,
+                                     start_timestamp, max_capacity_per_vehicle, G, repetitions):
+    all_successful_trips = []
+    all_passengers_gdfs = []
+    all_section_trip_points = []
+
+    for _ in range(repetitions):
+        section_trip_points, successful_trips, passengers_gdf = process_demand_points(
+            demand_nodes, target_nodes, main_stop_nodes, max_travel_time_per_section,
+            start_timestamp, max_capacity_per_vehicle, G)
+
+        all_successful_trips.append(successful_trips)
+        all_passengers_gdfs.append(passengers_gdf)
+        all_section_trip_points.append(section_trip_points)
+
+        # Entferne bereits bediente Demand-Nodes aus den Daten
+        demand_nodes = remove_serviced_demand_nodes(demand_nodes, passengers_gdf)
+        target_nodes = remove_serviced_target_nodes(target_nodes, passengers_gdf)
+
+    return all_section_trip_points, all_successful_trips, all_passengers_gdfs
+
+
+def remove_serviced_demand_nodes(demand_nodes, passengers_gdf):
+    # Entferne bereits bediente Demand-Nodes aus den Daten
+    demand_nodes = demand_nodes[~demand_nodes['nearest_node'].isin(passengers_gdf['origin'])]
+    return demand_nodes
+
+
+def remove_serviced_target_nodes(target_nodes, passengers_gdf):
+    # Entferne bereits bediente Ziel-Nodes aus den Daten
+    target_nodes = target_nodes[~target_nodes['nearest_node'].isin(passengers_gdf['destination'])]
+    return target_nodes
+
+def updated_all_passenger_gdf(all_passengers_gdfs, all_section_trip_points, G):
+    updated_passengers_gdfs = []
+    for passengers_gdf, sorted_section_trip_points in zip(all_passengers_gdfs, all_section_trip_points):
+        passengers_gdf = calculate_passenger_travel_time(sorted_section_trip_points, G, passengers_gdf)
+        passengers_gdf = add_zones_to_gdf(passengers_gdf)
+        passengers_gdf = calculate_income(passengers_gdf)
+        updated_passengers_gdfs.append(passengers_gdf)
+    return updated_passengers_gdfs
+
+def create_sections_routes_all_passengers(all_section_trip_points, G):
+    all_routes = []
+    all_total_travel_time = []
+    all_total_distance = []
+    for sorted_section_trip_points in all_section_trip_points:
+        # Unterteile die Nodes in die Sektoren
+        section1, section2, section3, section4 = split_sections(sorted_section_trip_points)
+        route1 = route_node(G, [section1])
+        route2 = route_node(G, [section2])
+        route3 = route_node(G, [section3])
+        route4 = route_node(G, [section4])
+
+        all_routes.append([route1, route2, route3, route4])
+
+        # Reisezeit der Sektoren & gesamt Reisezeit
+        travel_time1 = calculate_section_travel_time(route1, G)
+        travel_time2 = calculate_section_travel_time(route2, G)
+        travel_time3 = calculate_section_travel_time(route3, G)
+        travel_time4 = calculate_section_travel_time(route4, G)
+
+        # Strecke des odpt Fahrzeuges
+        travel_distance1 = calculate_route_travel_distance(route1, G)
+        travel_distance2 = calculate_route_travel_distance(route2, G)
+        travel_distance3 = calculate_route_travel_distance(route3, G)
+        travel_distance4 = calculate_route_travel_distance(route4, G)
+
+        total_travel_time = (travel_time1 + travel_time2 + travel_time3 + travel_time4) / 60
+        print('Gesamtreisezeit in Minuten:', total_travel_time)
+        all_total_travel_time.append(total_travel_time)
+
+        total_distance = travel_distance1 + travel_distance2 + travel_distance3 + travel_distance4
+        print('Zurückgelegte Distanz:', total_distance, 'km')
+        all_total_distance.append(total_distance)
+    return all_routes, all_total_travel_time, all_total_distance
