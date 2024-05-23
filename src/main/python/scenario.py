@@ -252,6 +252,6 @@ def scenario(stunden_verkehrstag):
     # gdf_hohe_Dichte, gdf_tiefe_Dichte,
     # DATEN_STRASSENNETZ, destination_gdf)
 
-stunden_verkehrstag = 18
-scenario(stunden_verkehrstag)
+#stunden_verkehrstag = 18
+#scenario(stunden_verkehrstag)
 

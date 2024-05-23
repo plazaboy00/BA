@@ -88,9 +88,9 @@ def load_geojson(file_path):
 def compute_travel_time(passengers_gdf):
     travel_times = []
     for idx, row in passengers_gdf.iterrows():
-        start = row['stoptime start']
-        end = row['stoptime end']
-        travel_time = end - start
+        start = pd.to_datetime(row['stoptime start'])
+        end = pd.to_datetime(row['stoptime end'])
+        travel_time = (end - start).total_seconds() / 60  # Convert to minutes
         travel_times.append(travel_time)
 
     passengers_gdf['travel_time'] = travel_times
@@ -158,17 +158,20 @@ def passengers_on_bus(bus_stops_gdf, demand_geojson, destination_geojson, max_ca
 
 
 def compute_travel_time_bus(busstops_with_time):
-    # Konvertieren der 'timestamp'-Spalte in datetime-Objekte
+    # Konvertieren der 'ankunftszeit'-Spalte in datetime-Objekte
     busstops_with_time['ankunftszeit'] = pd.to_datetime(busstops_with_time['ankunftszeit'])
 
-    # Zugriff auf den ersten und letzten Eintrag der 'timestamp'-Spalte
+    # Zugriff auf den ersten und letzten Eintrag der 'ankunftszeit'-Spalte
     first_timestamp = busstops_with_time['ankunftszeit'].iloc[0]
     last_timestamp = busstops_with_time['ankunftszeit'].iloc[-1]
 
     # Berechnung der Reisezeit
     travel_time = last_timestamp - first_timestamp
 
-    return travel_time
+    # Konvertieren der Reisezeit in Minuten
+    travel_time_minutes = travel_time.total_seconds() / 60
+
+    return travel_time_minutes
 
 
 def add_zones_to_gdf(passengers_gdf):

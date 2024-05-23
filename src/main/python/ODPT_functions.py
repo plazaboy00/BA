@@ -200,22 +200,39 @@ def add_targetnode_to_section(start_node, target_node, demand_node, section_trip
     return section_trip_points  # Falls keine passende Unterliste gefunden wurde, gib die unveränderte Liste zurück
 
 
-def sort_sublists_by_shortest_path(sorted_section_trip_points, graph):
+def insert_demand_node_by_shortest_path(sorted_section_trip_points, graph, demand_node):
     sorted_sublists = []
 
     for sublist in sorted_section_trip_points:
         start_node = sublist[0][0]  # Der erste Wert im ersten Tupel
-        end_node = sublist[-1][0]   # Der erste Wert im letzten Tupel
+        end_node = sublist[-1][0]  # Der erste Wert im letzten Tupel
 
-        # Sortiere die restlichen Knoten basierend auf ihrer Entfernung zum Startknoten
-        sorted_nodes = sorted(sublist[1:-1],
-                              key=lambda x: nx.shortest_path_length(graph, start_node, x[0], weight='travel_time'))
+        # Extrahiere die bestehenden Nodes ohne das erste und letzte Element
+        existing_nodes = sublist[1:-1]
+        sorted_nodes = []
+        node_before_demand = (start_node, 2)
+        demand_node_reached = False
+
+        for node, nodetype in existing_nodes:
+            # Berechne den Abstand von der demand_node zu diesem Knoten
+            path_to_next_node = nx.shortest_path_length(graph, node_before_demand[0], node, weight='travel_time')
+            path_to_demand_node = nx.shortest_path_length(graph, node_before_demand[0], demand_node, weight='travel_time')
+
+            if path_to_demand_node < path_to_next_node and demand_node_reached == False:
+                demand_node_reached = True
+                sorted_nodes.append((demand_node, 0))
+
+
+            # Sortiere die Knoten basierend auf ihrer Entfernung zur demand_node
+            sorted_nodes.append((node, nodetype))
+            node_before_demand = (node, nodetype)
 
         # Füge die sortierte Unterliste zur sortierten Liste hinzu, ohne den zweiten Wert der Tupel zu ändern
         sorted_sublist = [sublist[0]] + sorted_nodes + [sublist[-1]]
         sorted_sublists.append(sorted_sublist)
 
     return sorted_sublists
+
 
 def sort_sublists_by_shortest_path_with_target(sorted_section_trip_points, graph, demand_node, target_node):
     sorted_sublists = []
@@ -228,28 +245,32 @@ def sort_sublists_by_shortest_path_with_target(sorted_section_trip_points, graph
         existing_nodes = sublist[1:-1]
         sorted_nodes = []
         demand_node_reached = False
+        target_node_inserted = False
 
         for node, nodetype in existing_nodes:
-            if demand_node_reached:
-                # Berechne den Abstand von der demand_node zu diesem Knoten und zum target_node
-                path_to_next_node = nx.shortest_path_length(graph, demand_node, node, weight='travel_time')
-                path_to_target = nx.shortest_path_length(graph, demand_node, target_node, weight='travel_time')
-
-                if path_to_target < path_to_next_node:
-                    sorted_nodes.append((target_node, 1))
-                    # Setze demand_node_reached zurück, da wir jetzt den target_node erreicht haben
-                    demand_node_reached = False
+            if not demand_node_reached:
+                sorted_nodes.append((node, nodetype))
 
             if node == demand_node:
                 demand_node_reached = True
 
-            sorted_nodes.append((node, nodetype))
+            if demand_node_reached and not target_node_inserted:
+                path_to_target = nx.shortest_path_length(graph, node, target_node, weight='travel_time')
+                path_to_next_node = nx.shortest_path_length(graph, node, target_node, weight='travel_time')
+
+                if path_to_target < path_to_next_node:
+                    sorted_nodes.append((target_node, 1))
+                    target_node_inserted = True
+
+            if demand_node_reached:
+                sorted_nodes.append((node, nodetype))
 
         # Füge das erste und letzte Element wieder hinzu
         sorted_sublist = [sublist[0]] + sorted_nodes + [sublist[-1]]
         sorted_sublists.append(sorted_sublist)
 
     return sorted_sublists
+
 
 
 
@@ -400,7 +421,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         section_trip_points = add_demandnode_to_section(nearest_node_demand_start, nearest_node_demand_end, demand_node,
                                                         section_trip_points)
         # print('section_trip_points 2', section_trip_points)
-        section_trip_points = sort_sublists_by_shortest_path(section_trip_points, G)
+        section_trip_points = insert_demand_node_by_shortest_path(section_trip_points, G, demand_node)
         # print('section_trip_points 3', section_trip_points)
 
         # Überprüfe, ob die Reisezeit pro Abschnitt die maximale Reisezeit pro Abschnitt überschreitet
@@ -441,6 +462,9 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
 
         # Finde die zugehörigen Zielknoten für diesen Demand-Knoten
         corresponding_target_node = target_nodes.loc[target_nodes['passagier_nummer'] == demand_row['passagier_nummer']]
+        if corresponding_target_node.empty:
+            print(f"Kein Zielknoten gefunden für Passagier {demand_row['passagier_nummer']}")
+            continue
         section_tuple = corresponding_target_node['section'].values[0]
         target_start_stop, target_end_stop = section_tuple
         target_node = corresponding_target_node['nearest_node'].values[0]
@@ -509,7 +533,7 @@ def process_demand_points(demand_nodes, target_nodes, main_stop_nodes, max_trave
         passengers.append({
             'origin': demand_node,
             'destination': target_node,
-            'id:': demand_row['passagier_nummer'] - 1,
+            'id': demand_row['passagier_nummer'] - 1,
             'start gemeinde': demand_gemeinde,
             'end gemeinde': target_gemeinde,
             'timestamp': demand_timestamp
@@ -665,13 +689,13 @@ def process_demand_points_repeatedly(demand_nodes, target_nodes, main_stop_nodes
 
 def remove_serviced_demand_nodes(demand_nodes, passengers_gdf):
     # Entferne bereits bediente Demand-Nodes aus den Daten
-    demand_nodes = demand_nodes[~demand_nodes['nearest_node'].isin(passengers_gdf['origin'])]
+    demand_nodes = demand_nodes[~demand_nodes.index.isin(passengers_gdf['id'])]
     return demand_nodes
 
 
 def remove_serviced_target_nodes(target_nodes, passengers_gdf):
     # Entferne bereits bediente Ziel-Nodes aus den Daten
-    target_nodes = target_nodes[~target_nodes['nearest_node'].isin(passengers_gdf['destination'])]
+    target_nodes = target_nodes[~target_nodes.index.isin(passengers_gdf['id'])]
     return target_nodes
 
 def updated_all_passenger_gdf(all_passengers_gdfs, all_section_trip_points, G):
@@ -717,3 +741,9 @@ def create_sections_routes_all_passengers(all_section_trip_points, G):
         print('Zurückgelegte Distanz:', total_distance, 'km')
         all_total_distance.append(total_distance)
     return all_routes, all_total_travel_time, all_total_distance
+
+def count_passenger_list(all_successful_trips):
+    total_passenger = 0
+    for passenger in all_successful_trips:
+        total_passenger += passenger
+    return total_passenger

@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 
-def odpt(max_capacity, max_travel_time_per_section, repetitions):
+def odpt(max_capacity, max_travel_time_per_section, number_vehicles):
     ROOT_FILES = 'C:/Users/Linus/PycharmProjects/BA/'
     ROOT_Busstations = 'src/main/resources/Buslinie/Busstationen/'
     ROOT_odpt_stops = 'src/main/resources/ODPT/'
@@ -73,7 +73,7 @@ def odpt(max_capacity, max_travel_time_per_section, repetitions):
     start_timestamp = pd.Timestamp('2018-04-20 09:05:00')
     all_section_trip_points, all_successful_trips, all_passengers_gdfs = process_demand_points_repeatedly(
         demand_gdf, target_gdf, main_stops_gdf, max_travel_time_per_section, start_timestamp, max_capacity, G,
-        repetitions)
+        number_vehicles)
 
     def updated_all_passenger_gdf(all_passengers_gdfs, all_section_trip_points, G):
         updated_passengers_gdfs = []
@@ -93,17 +93,17 @@ def odpt(max_capacity, max_travel_time_per_section, repetitions):
     print(all_total_travel_time)
     print(all_total_distance)
 
-
+    total_passenger = count_passenger_list(all_successful_trips)
     mean_travel_time = np.mean(all_total_travel_time)
     mean_distance = np.mean(all_total_distance)
-    mean_successful_trips = np.mean(all_successful_trips)
+    #mean_successful_trips = np.mean(all_successful_trips)
     print('Durchschnittliche Reisezeit:', mean_travel_time, 'min')
     print('Durchschnittliche Distanz:', mean_distance, 'km')
-    print('Durchschnittliche erfolgreiche Trips:', mean_successful_trips)
+    print('Total erfolgreiche Trips:', all_successful_trips)
 
-    return mean_successful_trips, mean_distance, mean_travel_time, updated_all_passenger_gdf
+    return total_passenger, all_successful_trips, mean_distance, mean_travel_time, updated_all_passenger_gdf
 
 
 
-max_capacity_odpt, max_travel_time_per_section, repetitions = 5, 900, 2
-odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt(max_capacity_odpt, max_travel_time_per_section, repetitions)
+#max_capacity_odpt, max_travel_time_per_section, number_vehicles = 5, 900, 4
+#odpt_passengers, odpt_km, odpt_total_travel_time, passenger_gdf = odpt(max_capacity_odpt, max_travel_time_per_section, number_vehicles)

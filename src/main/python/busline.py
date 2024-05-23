@@ -76,8 +76,8 @@ def busline(max_capacity, waiting_time):
 
     return num_passengers, total_route_length, total_travel_time, passengers_gdf
 
-waiting_time = 20
-max_capacity_bus = 31
-busline_passengers, busline_km, busline_total_travel_time, passenger_gdf = busline(max_capacity_bus, waiting_time)
+#waiting_time = 20
+#max_capacity_bus = 31
+#busline_passengers, busline_km, busline_total_travel_time, passenger_gdf = busline(max_capacity_bus, waiting_time)
 #print(busline_km)
 #print(type(busline_km))
