@@ -80,7 +80,7 @@ def costs(df, stunden_verkehrstag, tage_vekehrsjahr):
     mean_km_bus = total_km_bus / len(df)
     mean_km_ODPT = total_km_ODPT / len(df)
 
-    bus_costs =  69.07
+    bus_costs = 69.07
     odpt_costs = 12.34
     bus_costs = costs_per_a_km(mean_km_bus, bus_costs)
     ODPT_costs = costs_per_a_km(mean_km_ODPT, odpt_costs)
